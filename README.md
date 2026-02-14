@@ -1,0 +1,67 @@
+# Claude Code Skills
+
+A collection of personal [Claude Code skills](https://docs.anthropic.com/en/docs/claude-code/skills) that extend Claude Code with reusable workflows for GitHub PR management and skill authoring.
+
+## Installation
+
+Clone or symlink this repository into your Claude Code skills directory:
+
+```bash
+# Clone directly into the skills directory
+git clone <repo-url> ~/.claude/skills
+
+# Or symlink individual skills
+ln -s /path/to/claude-skills/skills/addressing-pr-comments ~/.claude/skills/addressing-pr-comments
+```
+
+### Prerequisites
+
+- [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated
+- Git 2.32+ (required for `--trailer` flag in stacked PRs)
+- Node.js v24+ (for helper scripts)
+
+## Skills
+
+### addressing-pr-comments
+
+Systematically works through unresolved PR review comments: fetches threads via the GitHub GraphQL API, makes code changes, commits fixes, replies with commit links, and resolves threads. Supports declining feedback with professional justifications and skipping comments.
+
+**Invoke with:** `/addressing-pr-comments [PR link or number]`
+
+### building-skills
+
+An interactive guide for creating, editing, converting, and extracting Claude Code skills. Covers SKILL.md authoring, frontmatter configuration, description writing for reliable invocation, progressive disclosure patterns, sub-agent-to-skill conversion, and mining session history for reusable skill candidates. Adapted from [metaskills/skill-builder](https://github.com/metaskills/skill-builder).
+
+**Invoke with:** `/building-skills`
+
+### managing-stacked-prs
+
+Manages stacked PR workflows using native git and GitHub CLI. Tracks stack relationships through commit trailers (`Stack-Id`, `Stack-Parent-Branch`, `Stack-Position`). Supports initializing stacks, adding/inserting branches, rebasing and synchronizing, force-pushing safely with `--force-with-lease`, creating PRs with correct base targets, adopting existing stacks, checking CI status across a stack, and managing test-split stacks.
+
+**Invoke with:** `/managing-stacked-prs`
+
+### updating-pr-description
+
+Generates high-level PR descriptions in Problem/Solution format by analyzing the diff, commit history, and project context from Memory Bank. Preserves existing PR template sections and prompts before overwriting content.
+
+**Invoke with:** `/updating-pr-description [pr-number]`
+
+## Structure
+
+Each skill follows the standard Claude Code skill layout:
+
+```
+skills/<skill-name>/
+  SKILL.md              # Required - instructions and frontmatter
+  scripts/              # Optional - Node.js helper scripts (ESM, .mjs)
+  *.md                  # Optional - supporting docs with intention-revealing names
+```
+
+Scripts are executable Node.js modules that handle GitHub GraphQL queries, stack detection, commit validation, and other operations that benefit from structured output.
+
+## Companion Skills
+
+Several skills reference each other:
+
+- **managing-stacked-prs** uses `addressing-pr-comments` for resolving review threads across a stack and `updating-pr-description` for writing PR bodies.
+- **addressing-pr-comments** operates standalone but integrates naturally into the stacked PR review workflow.
