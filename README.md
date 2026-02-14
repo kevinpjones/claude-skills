@@ -1,6 +1,8 @@
 # Claude Code Skills
 
-A collection of personal [Claude Code skills](https://docs.anthropic.com/en/docs/claude-code/skills) that extend Claude Code with reusable workflows for GitHub PR management and skill authoring.
+A collection of personal [Claude Code skills](https://docs.anthropic.com/en/docs/claude-code/skills) that extend Claude Code with reusable workflows for GitHub PR management, skill authoring, and project knowledge management.
+
+The Memory Bank skills are designed to work with [memory-bank-mcp](https://github.com/kevinpjones/memory-bank-mcp/).
 
 ## Installation
 
@@ -21,6 +23,18 @@ ln -s /path/to/claude-skills/skills/addressing-pr-comments ~/.claude/skills/addr
 - Node.js v24+ (for helper scripts)
 
 ## Skills
+
+### initializing-memory-bank-projects
+
+Sets up a new [Memory Bank](https://github.com/kevinpjones/memory-bank-mcp/) project through structured codebase analysis, iterative user interviews, and documentation initialization. Creates and populates core memory bank files (projectbrief, productContext, systemPatterns, techContext, activeContext), analyzes the codebase for patterns and tech stack, then conducts a guided interview to capture requirements, constraints, and architectural decisions. Finishes by generating an implementation plan.
+
+**Invoke with:** `/initializing-memory-bank-projects [project-name]`
+
+### resuming-memory-bank-projects
+
+Resumes work on an existing [Memory Bank](https://github.com/kevinpjones/memory-bank-mcp/) project by reviewing all memory bank files, validating context integrity, assessing current codebase state, and generating a summary with implementation plan. Runs in a forked subagent (`context: fork`) to perform research and report back with line-number references into the memory bank for easy navigation.
+
+**Invoke with:** `/resuming-memory-bank-projects [project-name] [initial-focus]`
 
 ### addressing-pr-comments
 
@@ -65,3 +79,6 @@ Several skills reference each other:
 
 - **managing-stacked-prs** uses `addressing-pr-comments` for resolving review threads across a stack and `updating-pr-description` for writing PR bodies.
 - **addressing-pr-comments** operates standalone but integrates naturally into the stacked PR review workflow.
+- **updating-pr-description** reads from Memory Bank projects (via [memory-bank-mcp](https://github.com/kevinpjones/memory-bank-mcp/)) for project context when generating PR descriptions.
+- **initializing-memory-bank-projects** creates the Memory Bank project structure that `updating-pr-description` and `resuming-memory-bank-projects` read from.
+- **resuming-memory-bank-projects** loads and validates the project context created by `initializing-memory-bank-projects`, producing a summary for the main conversation.
