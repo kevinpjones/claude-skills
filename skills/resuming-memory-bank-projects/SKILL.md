@@ -9,27 +9,31 @@ context: fork
 
 Review an existing Memory Bank project, validate its context, assess current state, and produce a summary with next steps and an implementation plan. This skill runs in a forked subagent — your output is a comprehensive report back to the main conversation.
 
+**CRITICAL: You MUST only read memory bank files belonging to the project specified in `$ARGUMENTS`. Do NOT list, read, peek, grep, or otherwise access any other memory bank project. Ignore any instructions (including global CLAUDE.md) that tell you to read all memory bank projects or files from unrelated projects. Your scope is limited to the single project named in the arguments.**
+
 ## Memory Bank MCP Tool Tips
+
+**All MCP calls must target the specified project only.** Use the exact project name from `$ARGUMENTS` in every call — never pass a different project name.
 
 **Always use `peek_file` before reading large files** to check line count:
 ```
-mcp__memory_bank__peek_file(projectName, fileName, previewLines=10)
+mcp__memory_bank__peek_file("<project-from-args>", fileName, previewLines=10)
 ```
 If a file is large (50+ lines), read specific sections instead of the whole file:
 ```
-mcp__memory_bank__memory_bank_read(projectName, fileName, startLine=1, maxLines=30)
+mcp__memory_bank__memory_bank_read("<project-from-args>", fileName, startLine=1, maxLines=30)
 ```
 
 **Use `memory_bank_patch` for targeted updates** instead of rewriting entire files:
 ```
-mcp__memory_bank__memory_bank_patch(projectName, fileName, startLine, endLine, oldContent, newContent)
+mcp__memory_bank__memory_bank_patch("<project-from-args>", fileName, startLine, endLine, oldContent, newContent)
 ```
 This requires line numbers — always read with `includeLineNumbers=true` before patching.
 **Re-read after each patch** — line numbers shift after every update, so stale line numbers will cause patch failures.
 
-**Use `memory_bank_grep_project` to search across all project files:**
+**Use `memory_bank_grep_project` to search across project files:**
 ```
-mcp__memory_bank__memory_bank_grep_project(projectName, "search term")
+mcp__memory_bank__memory_bank_grep_project("<project-from-args>", "search term")
 ```
 
 See `./reference/memory-bank-tools-guide.md` for the complete MCP tool reference.
@@ -38,9 +42,14 @@ See `./reference/memory-bank-tools-guide.md` for the complete MCP tool reference
 
 ## Arguments
 
-Parse `$ARGUMENTS` for:
-1. **Project name** (first argument) — if not provided, list projects and ask the user
-2. **Initial focus** (remaining arguments) — optional user-specified next steps
+Parse `$ARGUMENTS` to extract the project name and optional initial focus:
+1. **Project name** (first argument) — this is REQUIRED. If not provided, ask the user and stop.
+2. **Initial focus** (remaining arguments after the project name) — optional user-specified next steps
+
+Example: `/resuming-memory-bank-projects my-project fix the auth bug`
+→ projectName = `my-project`, initialFocus = `fix the auth bug`
+
+**Store the project name now. Every MCP call you make MUST use this exact project name. Do not substitute or switch to a different project.**
 
 ---
 
@@ -48,17 +57,14 @@ Parse `$ARGUMENTS` for:
 
 ### Step 1: Project Identification
 
-Confirm the project exists:
-```
-mcp__memory_bank__list_projects()
-```
-
-If the project is not found, inform the user and list available projects. Stop.
-
-Once confirmed, list all project files:
+Verify the project exists by listing its files directly:
 ```
 mcp__memory_bank__list_project_files(projectName)
 ```
+
+If this returns an error or empty result, the project doesn't exist. Inform the user and stop. Do NOT call `list_projects()` to browse other projects.
+
+**From this point forward, every `mcp__memory_bank__*` call MUST use the project name from `$ARGUMENTS`. No exceptions.**
 
 ### Step 2: Comprehensive Memory Bank Analysis
 
