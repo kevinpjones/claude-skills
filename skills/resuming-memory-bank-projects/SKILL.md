@@ -194,6 +194,11 @@ For detailed context, refer to these memory bank locations:
 
 ### Recommended First Action
 [The single most important thing to do next]
+
+---
+**After presenting this summary, ask the user:**
+"Shall I proceed with this plan, or would you like to adjust anything first?"
+---
 ```
 
 ### Step 10: Update activeContext.md
@@ -207,6 +212,22 @@ Use `memory_bank_patch` for the update (read with line numbers first).
 
 ---
 
+## Post-Summary: Handoff to Main Conversation
+
+**This section is critical.** After the forked subagent returns its summary to the main conversation, the main conversation agent MUST:
+
+1. **Present the summary** to the user
+2. **Ask for approval**: "Shall I proceed with this plan, or would you like to adjust anything first?"
+3. **On approval**, immediately:
+   - Create tasks in the task list (using `TaskCreate`) for each item in the implementation plan
+   - Set the first task to `in_progress`
+   - **Begin working on the first task right away** — do not wait for further prompting
+4. **On adjustment**, incorporate the user's feedback, update the plan, and re-present for approval
+
+**Do NOT stop after presenting the summary.** The goal is a seamless transition from context loading into active implementation.
+
+---
+
 ## Success Criteria
 
 - [ ] All memory bank files reviewed and validated
@@ -215,6 +236,7 @@ Use `memory_bank_patch` for the update (read with line numbers first).
 - [ ] Summary includes line number references into memory bank
 - [ ] Implementation plan generated with actionable tasks
 - [ ] `activeContext.md` updated with resume status
+- [ ] Tasks created and work started after user approval
 
 ## Supporting Files
 
