@@ -1,12 +1,14 @@
 # Stack Rebase and Synchronization Workflow
 
-Detailed procedures for rebasing stacked branches after changes to lower-level branches. Derived from real-world stacked PR management patterns.
+Detailed procedures for rebasing stacked branches after changes to branches closer to `main`. Derived from real-world stacked PR management patterns.
+
+**Orientation:** Bottom = first branch (targeting `main`). Top = last branch. "Above" = further from `main`. "Below" = closer to `main`.
 
 ## When to Rebase
 
 Rebase the stack whenever:
-- A commit is added to any branch that has branches above it
-- A commit is amended or squashed on any branch below the top
+- A commit is added to any branch that has branches above it (closer to the top)
+- A commit is amended or squashed on any branch other than the top
 - The base branch (`main`) is updated and you want to incorporate changes
 - After cherry-picking or moving commits between branches
 - After inserting a new branch at the bottom or middle of the stack

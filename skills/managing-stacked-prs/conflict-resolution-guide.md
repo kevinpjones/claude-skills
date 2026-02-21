@@ -2,6 +2,8 @@
 
 Strategies for resolving rebase conflicts that arise during stacked PR management.
 
+**Orientation:** Bottom = first branch (targeting `main`). Top = last branch. "Lower" = closer to `main`. "Upper" = further from `main`.
+
 ## Why Conflicts Happen in Stacks
 
 Conflicts occur when changes in a branch overlap with changes in its parent. Common scenarios:

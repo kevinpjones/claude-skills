@@ -2,6 +2,8 @@
 
 Detailed procedure for fetching and addressing PR review comments across all PRs in a stacked PR workflow.
 
+**Orientation:** Bottom = first branch (targeting `main`). Top = last branch. "Bottom-up" = processing from `main` outward.
+
 ## Overview
 
 When working with stacked PRs, review comments may exist across multiple PRs. The key insight is to **process comments bottom-up** starting from the lowest branch in the stack. This ensures that when you rebase upper branches after fixing comments on lower branches, the rebased commits incorporate all fixes cleanly.

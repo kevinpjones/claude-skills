@@ -1,11 +1,30 @@
 ---
 name: managing-stacked-prs
-description: Use this skill when creating, managing, or working with stacked pull requests using native git and GitHub CLI. This includes initializing PR stacks, adding branches to a stack, adopting existing stacked branches and PRs, rebasing stacked branches, force pushing stack branches safely, creating PRs with correct base branch targets, addressing review feedback across a stack, managing stack metadata via commit trailers, checking CI status across a PR stack, and managing test-split stacks where tests are separated from implementation. Trigger keywords include "stacked PRs", "PR stack", "stack branches", "stacked pull requests", "rebase stack", "stack review comments", "adopt stack", "import stack", "existing stack", "CI status", "check status", "failing checks", "required checks", "stack CI", "split tests", "test branch", "collapse stack", "merge stack".
+description: Use this skill when creating, managing, or working with stacked pull requests using native git and GitHub CLI. This includes initializing PR stacks, adding branches to a stack, adopting existing stacked branches and PRs, rebasing stacked branches, force pushing stack branches safely, creating PRs with correct base branch targets, addressing review feedback across a stack, managing stack metadata via commit trailers, checking CI status across a PR stack, squash-merging stacked PRs in order, and managing test-split stacks where tests are separated from implementation. Trigger keywords include "stacked PRs", "PR stack", "stack branches", "stacked pull requests", "rebase stack", "stack review comments", "adopt stack", "import stack", "existing stack", "CI status", "check status", "failing checks", "required checks", "stack CI", "split tests", "test branch", "collapse stack", "merge stack", "squash merge stack", "merge PRs in order", "merge all PRs".
 ---
 
 # Managing Stacked Pull Requests
 
 Create, manage, and maintain stacked PR workflows using native git commands and GitHub CLI (`gh`). Stack relationships are tracked through git commit trailers.
+
+## Stack Orientation
+
+A stack is ordered from **bottom** (closest to `main`) to **top** (furthest from `main`):
+
+```
+main ← branch-1 (bottom) ← branch-2 ← branch-3 (top)
+```
+
+| Term | Meaning |
+|------|---------|
+| **Bottom** | The first branch, targeting `main` directly |
+| **Top** | The last branch, furthest from `main` |
+| **Above** | Closer to the top (further from `main`) |
+| **Below** | Closer to the bottom (closer to `main`) |
+| **Parent** | The branch directly below (e.g., branch-1 is branch-2's parent) |
+| **Child** | The branch directly above (e.g., branch-2 is branch-1's child) |
+
+Operations like rebasing, merging, and creating PRs proceed **bottom-to-top** — from `main` outward.
 
 ## Prerequisites
 
@@ -286,73 +305,9 @@ The script outputs `instructions.tip` for handling multiple PRs. See `./managing
 
 ## Workflow 7: Create PRs for Stack
 
-Create GitHub PRs with each targeting its parent branch.
+Create GitHub PRs bottom-to-top, each targeting its parent branch. Include a **PR Stack** numbered list (not a table) at the bottom of each PR body — GitHub auto-renders `#123` references with title and status in list items.
 
-### Step 1: Detect Stack and Ensure Branches Are Pushed
-
-```bash
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
-# Push any unpushed branches
-git push -u origin <branch-name>
-```
-
-### Step 2: Check for PR Template
-
-```bash
-find .github -name 'PULL_REQUEST_TEMPLATE*' -o -name 'pull_request_template*' 2>/dev/null
-```
-
-If a template exists, use it. Otherwise use Problem/Solution format.
-
-### Step 3: Create PRs Bottom-to-Top
-
-Each PR uses `--base` to target its parent branch and includes a **PR Stack** section at the bottom of the body using a **numbered list** (not a table).
-
-**Why a list instead of a table:** GitHub auto-renders PR references (`#123`) with the full PR title and merge status icon in list items, but NOT inside table cells. A list stays current automatically — no stale Title column to maintain.
-
-Stack list format (for a 3-PR stack, from the perspective of PR #2):
-
-```markdown
----
-
-#### PR Stack: `auth-system`
-
-1. #101
-2. 👉 **This PR** — login API
-3. #103
-```
-
-- Use `👉 **This PR**` for the current PR's row, followed by `—` and a short stable role description
-- For other PRs, just use the `#number` reference — GitHub renders the title and status automatically
-- The role description after `—` should describe the PR's purpose in the stack (not duplicate the PR title)
-
-Create PRs bottom-to-top, each targeting its parent branch:
-
-```bash
-gh pr create --base main --head auth-system-1-user-model \
-  --title "PROJ-123: Add user model" --body "$(cat <<'EOF'
-## Problem
-...
-
-## Solution
-...
-
----
-
-#### PR Stack: `auth-system`
-
-1. 👉 **This PR** — database migration
-2. #TBD
-3. #TBD
-EOF
-)"
-```
-
-### Step 4: Update Stack Lists
-
-After all PRs are created, update each PR body with actual PR numbers using `gh pr edit <number> --body "..."`. Replace `#TBD` placeholders with real PR numbers.
-
-Use the `updating-pr-description` skill for richer Problem/Solution content.
+For the full procedure including PR template detection, stack list format, and `#TBD` placeholder workflow, see `./creating-stack-prs-workflow.md`.
 
 ---
 
@@ -436,6 +391,24 @@ For the full categorization guide, decision tree, fix procedures, and collapse w
 
 ---
 
+## Workflow 12: Squash-Merge a Stack
+
+Merge all PRs in a stack sequentially from bottom to top using squash merges.
+
+**CRITICAL: NEVER use `--delete-branch`** with `gh pr merge` for stacked PRs. Deleting a branch auto-closes all PRs targeting it as their base. Auto-closed PRs **cannot be reopened** — they must be recreated, requiring fresh approval.
+
+**Merge cycle** (repeat for each PR, bottom-to-top):
+1. `gh pr merge <pr> --squash` (no `--delete-branch`)
+2. `git fetch origin main`
+3. `git rebase --onto origin/main <old-base-commit> <next-branch>` — skip squashed commits
+4. `gh pr edit <next-pr> --base main`
+5. Cascade rebase remaining branches above, force push
+6. Wait for CI, then merge next
+
+For the full step-by-step procedure, complete 4-PR example, and recovery from accidental `--delete-branch`, see `./squash-merging-stack-workflow.md`.
+
+---
+
 ## Scripts Reference
 
 All scripts are in `~/.claude/skills/managing-stacked-prs/scripts/` and are directly executable (no `node` prefix needed).
@@ -477,10 +450,15 @@ Write trailers manually in the commit body (blank line after subject, then `Stac
 ### PR Base Branch Is Wrong
 Run `gh pr edit <number> --base <correct-base-branch>`.
 
+### PR Auto-Closed After Merge
+If `--delete-branch` was used during a squash merge, child PRs are auto-closed and **cannot be reopened**. See "Recovery: Auto-Closed PR Due to Branch Deletion" above. The PR must be recreated and will need fresh approval.
+
 ---
 
 ## Supporting Files
 
+- `./squash-merging-stack-workflow.md` - Full merge procedure, 4-PR example, and auto-closed PR recovery
+- `./creating-stack-prs-workflow.md` - PR creation procedure, stack list format, and template detection
 - `./stack-rebase-and-sync-workflow.md` - Detailed rebase procedures, `@{1}` technique, `--onto` patterns, inserting branches, cherry-pick escape hatch
 - `./stack-pr-review-workflow.md` - Full PR review cycle across stacked branches
 - `./conflict-resolution-guide.md` - Rebase conflict resolution strategies and recovery
