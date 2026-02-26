@@ -56,7 +56,7 @@ Stack relationships are tracked via git commit trailers on the initial commit of
 
 **Example commit with trailers:**
 ```bash
-git commit -m "PROJ-123/feat/add-user-model" \
+git commit -m "PROJ-123: Add user model" \
   --trailer "Stack-Id: auth-system" \
   --trailer "Stack-Parent-Branch: main" \
   --trailer "Stack-Position: 1"
@@ -64,30 +64,47 @@ git commit -m "PROJ-123/feat/add-user-model" \
 
 Resulting commit message:
 ```
-PROJ-123/feat/add-user-model
+PROJ-123: Add user model
 
 Stack-Id: auth-system
 Stack-Parent-Branch: main
 Stack-Position: 1
 ```
 
-## Commit Message Format
+## Branch Naming Convention
 
-All commits MUST follow: `<JIRA-ID>/<TYPE>/<description-kebab-case>`
+All branches MUST follow: `<ISSUE-ID>/<TYPE>/<kebab-cased-summary>`
 
-**Valid types:** `feat`, `fix`, `chore`, `perf`, `security`, `refactor`, `test`
+**Valid types:** `feat`, `fix`, `chore`, `perf`, `security`, `refactor`
 
 **Examples:**
 - `PROJ-123/feat/add-user-authentication`
 - `BILLING-456/fix/invoice-rounding-error`
 - `CORE-789/refactor/simplify-data-pipeline`
 
+**No issue number:** If the user specifies there is no issue, drop the issue prefix:
+- `feat/add-user-authentication`
+- `fix/invoice-rounding-error`
+
+## Commit Message Format
+
+All commit message subjects MUST follow: `<ISSUE-ID>: <Imperative mood description>`
+
+**Examples:**
+- `PROJ-123: Add user authentication`
+- `BILLING-456: Fix invoice rounding error`
+- `CORE-789: Simplify data pipeline`
+
+**No issue number:** Drop the prefix entirely — just use the imperative mood subject:
+- `Add user authentication`
+- `Fix invoice rounding error`
+
 Validate before committing:
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/validate-commit-message.mjs "PROJ-123/feat/add-user-model"
+~/.claude/skills/managing-stacked-prs/scripts/validate-commit-message.mjs "PROJ-123: Add user model"
 ```
 
-If the JIRA issue ID is unknown, prompt the user with the AskUserQuestion tool.
+If the issue ID is unknown, prompt the user with the AskUserQuestion tool.
 
 Only the **initial commit** on each branch needs stack trailers. Subsequent commits on the same branch use the standard message format without trailers.
 
@@ -103,17 +120,17 @@ Ask the user (if not already provided):
 - **Stack name** (kebab-case, e.g., `auth-system`)
 - **Base branch** (usually `main` or `develop`)
 - **First branch description** (e.g., `user-model`)
-- **JIRA issue ID** (e.g., `PROJ-123`)
+- **Issue ID** (e.g., `PROJ-123`) — if the user says there is no issue, omit the issue prefix from branch names and commit messages
 
 ### Step 2: Create the First Branch
 
 ```bash
 git checkout main
 git pull origin main
-git checkout -b "auth-system-1-user-model"
+git checkout -b "PROJ-123/feat/user-model"
 ```
 
-Branch naming convention: `<stack-name>-<position>-<description>`
+Branch naming convention: `<ISSUE-ID>/<TYPE>/<kebab-cased-summary>` (or `<TYPE>/<kebab-cased-summary>` with no issue)
 
 ### Step 3: Make Changes and Commit
 
@@ -121,7 +138,7 @@ After the user makes changes:
 
 ```bash
 git add <specific-files>
-git commit -m "PROJ-123/feat/user-model" \
+git commit -m "PROJ-123: Add user model" \
   --trailer "Stack-Id: auth-system" \
   --trailer "Stack-Parent-Branch: main" \
   --trailer "Stack-Position: 1"
@@ -156,9 +173,9 @@ Follow the `add_branch` command from the output. After making changes, commit wi
 
 ```bash
 git add <specific-files>
-git commit -m "PROJ-123/feat/session-tokens" \
+git commit -m "PROJ-123: Add session tokens" \
   --trailer "Stack-Id: auth-system" \
-  --trailer "Stack-Parent-Branch: auth-system-2-login-api" \
+  --trailer "Stack-Parent-Branch: PROJ-123/feat/login-api" \
   --trailer "Stack-Position: 3"
 git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 ```
@@ -224,7 +241,7 @@ git stash save "transfer: <description>"
 git checkout <target-branch>
 git stash pop
 git add <specific-files>
-git commit -m "<JIRA-ID>/<TYPE>/<description>"
+git commit -m "<ISSUE-ID>: <Imperative mood description>"
 ```
 
 ### Option B: Already-Committed Changes (Use Cherry-Pick)

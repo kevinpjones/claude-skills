@@ -47,7 +47,7 @@ For a 3-PR stack, from the perspective of PR #2:
 Create PRs bottom-to-top, each targeting its parent branch:
 
 ```bash
-gh pr create --base main --head auth-system-1-user-model \
+gh pr create --base main --head PROJ-123/feat/user-model \
   --title "PROJ-123: Add user model" --body "$(cat <<'EOF'
 ## Problem
 ...

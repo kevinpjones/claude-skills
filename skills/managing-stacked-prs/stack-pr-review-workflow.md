@@ -51,9 +51,9 @@ Display a summary:
 ```
 Stack Review Summary: auth-system
 ================================
-PR #42 (auth-system-1-user-model) - 3 unresolved comments
-PR #43 (auth-system-2-login-api) - 1 unresolved comment
-PR #44 (auth-system-3-session-tokens) - 0 unresolved comments
+PR #42 (PROJ-123/feat/user-model) - 3 unresolved comments
+PR #43 (PROJ-123/feat/login-api) - 1 unresolved comment
+PR #44 (PROJ-123/feat/session-tokens) - 0 unresolved comments
 
 Total: 4 unresolved comments across 2 PRs
 ```
@@ -67,7 +67,7 @@ Starting from the lowest branch that has comments:
 #### 5a. Check Out the Branch
 
 ```bash
-git checkout auth-system-1-user-model
+git checkout PROJ-123/feat/user-model
 ```
 
 #### 5b. Process Each Comment on This Branch
@@ -94,7 +94,7 @@ Fix any failures before proceeding.
 
 ```bash
 git add <specific-files>
-git commit -m "<JIRA-ID>/fix/address-review-feedback"
+git commit -m "<ISSUE-ID>: Address review feedback"
 ```
 
 Validate the commit message:
@@ -106,11 +106,11 @@ Validate the commit message:
 
 ```bash
 # For each branch above (in order):
-git checkout auth-system-2-login-api
-git rebase --empty=drop auth-system-1-user-model
+git checkout PROJ-123/feat/login-api
+git rebase --empty=drop PROJ-123/feat/user-model
 
-git checkout auth-system-3-session-tokens
-git rebase --empty=drop auth-system-2-login-api
+git checkout PROJ-123/feat/session-tokens
+git rebase --empty=drop PROJ-123/feat/login-api
 ```
 
 Handle any conflicts (see `./conflict-resolution-guide.md`).
@@ -119,9 +119,9 @@ Handle any conflicts (see `./conflict-resolution-guide.md`).
 
 ```bash
 git fetch origin
-git push --force-with-lease origin auth-system-1-user-model
-git push --force-with-lease origin auth-system-2-login-api
-git push --force-with-lease origin auth-system-3-session-tokens
+git push --force-with-lease origin PROJ-123/feat/user-model
+git push --force-with-lease origin PROJ-123/feat/login-api
+git push --force-with-lease origin PROJ-123/feat/session-tokens
 ```
 
 #### 5g. Respond to and Resolve Threads
@@ -173,7 +173,7 @@ Sometimes a review comment on one PR requires changes in a different branch of t
 
 Example reply:
 ```
-Fixed in [abc1234](commit-link) on branch `auth-system-1-user-model`. The change propagates to this PR via rebase.
+Fixed in [abc1234](commit-link) on branch `PROJ-123/feat/user-model`. The change propagates to this PR via rebase.
 ```
 
 ## Declining Feedback on Stack PRs

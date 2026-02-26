@@ -215,9 +215,12 @@ async function discoverStack(startPR) {
 }
 
 /**
- * Extracts the description segment from a branch name (the part after the last `/`).
- * For branches like "BILL-5343/perf/stacked/add-user-model", returns "add-user-model".
- * For branches like "feature-auth", returns "feature-auth".
+ * Extracts the description segment from a branch name.
+ * Branch format: ISSUE-ID/<type>/<kebab-description> or <type>/<kebab-description>
+ *
+ * For "PROJ-123/feat/add-user-model", returns "add-user-model".
+ * For "feat/add-user-model", returns "add-user-model".
+ * For "feature-auth", returns "feature-auth".
  */
 function getBranchDescription(branchName) {
   const lastSlashIdx = branchName.lastIndexOf('/');

@@ -127,7 +127,7 @@ async function detectStack(targetStackId) {
       summary: `Stack "${targetStackId}" has ${stackBranches.length} branch(es) based on \`${baseBranch}\`.`
         + (currentEntry ? ` Currently on \`${currentEntry.name}\` (position ${currentEntry.position}).` : ''),
       next_steps: {
-        add_branch: `Create from the top branch: git checkout ${topBranch.name} && git checkout -b ${targetStackId}-${stackBranches.length + 1}-<description>`,
+        add_branch: `Create from the top branch: git checkout ${topBranch.name} && git checkout -b <ISSUE-ID>/<type>/<description>`,
         rebase: `After modifying a branch, rebase all branches above it using the @{1} technique (see stack-rebase-and-sync-workflow.md).`,
         verify: `git log --oneline ${baseBranch}..${branchNames[0]}` + (branchNames.length > 1 ? ` && git log --oneline ${branchNames.slice(0, -1).map((b, i) => `${b}..${branchNames[i + 1]}`).join(' && git log --oneline ')}` : ''),
         force_push: `git push --force-with-lease origin ${branchNames.join(' ')}`,

@@ -171,9 +171,9 @@ If a rebase succeeded on branch 2 but failed on branch 3:
 1. Branch 2 is already rebased - leave it
 2. Fix branch 3's rebase:
    ```bash
-   git checkout auth-system-3-session-tokens
+   git checkout PROJ-123/feat/session-tokens
    git rebase --abort   # if rebase is still in progress
-   git rebase --empty=drop auth-system-2-login-api
+   git rebase --empty=drop PROJ-123/feat/login-api
    ```
 3. Resolve conflicts and continue
 

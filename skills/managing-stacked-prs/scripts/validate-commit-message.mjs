@@ -2,18 +2,17 @@
 /**
  * Validates commit messages against the required format.
  *
- * Format: <JIRA-ISSUE-ID>/<TYPE>/<description-kebab-case>
+ * Format: <ISSUE-ID>: <Imperative mood subject>
+ *   or:  <Imperative mood subject>  (when no issue number)
  *
  * Usage:
  *   validate-commit-message.mjs <message>
  *   validate-commit-message.mjs --check-last
  *
- * Valid types: feat, fix, chore, perf, security, refactor, test
- *
  * Examples:
- *   PROJ-123/feat/add-user-authentication
- *   BILLING-456/fix/invoice-calculation-error
- *   CORE-789/refactor/simplify-data-pipeline
+ *   PROJ-123: Add user authentication
+ *   BILLING-456: Fix invoice calculation error
+ *   Add user authentication  (no issue)
  *
  * Exit codes:
  *   0 - Valid
@@ -25,56 +24,97 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-const VALID_TYPES = ['feat', 'fix', 'chore', 'perf', 'security', 'refactor', 'test'];
-const COMMIT_PATTERN = /^([A-Z][A-Z0-9]+-\d+)\/(feat|fix|chore|perf|security|refactor|test)\/([a-z0-9][a-z0-9-]*[a-z0-9])$/;
+// Matches: ISSUE-123: Imperative mood subject
+const COMMIT_WITH_ISSUE = /^([A-Z][A-Z0-9]+-\d+): (.+)$/;
+// Matches: Imperative mood subject (starts with uppercase letter)
+const COMMIT_WITHOUT_ISSUE = /^[A-Z][a-zA-Z].*$/;
 
 function validateMessage(message) {
   // Extract subject line (first line)
   const subject = message.split('\n')[0].trim();
 
-  const match = subject.match(COMMIT_PATTERN);
+  // Try matching with issue ID first
+  const issueMatch = subject.match(COMMIT_WITH_ISSUE);
 
-  if (!match) {
-    const errors = [];
-    const parts = subject.split('/');
+  if (issueMatch) {
+    const description = issueMatch[2];
 
-    if (!/^[A-Z][A-Z0-9]+-\d+/.test(subject)) {
-      errors.push('Missing or invalid JIRA issue ID (expected format: PROJ-123)');
-    }
-
-    if (parts.length >= 2 && !VALID_TYPES.includes(parts[1])) {
-      errors.push(`Invalid type "${parts[1]}". Valid types: ${VALID_TYPES.join(', ')}`);
-    }
-
-    if (parts.length < 3 || !parts[2]) {
-      errors.push('Missing description in kebab-case');
-    } else if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(parts[2])) {
-      errors.push('Description must be kebab-case (lowercase letters, numbers, hyphens)');
-    }
-
-    if (errors.length === 0) {
-      errors.push(`Expected format: <JIRA-ID>/<TYPE>/<description-kebab-case>`);
+    // Validate the description starts with an uppercase letter (imperative mood convention)
+    if (!/^[A-Z]/.test(description)) {
+      return {
+        valid: false,
+        subject,
+        issue_id: issueMatch[1],
+        errors: ['Description must start with an uppercase letter (imperative mood, e.g., "Add", "Fix", "Update")'],
+        instructions: {
+          format: '<ISSUE-ID>: <Imperative mood description>',
+          examples: ['PROJ-123: Add user authentication', 'BILLING-456: Fix invoice rounding error'],
+          tip: 'Start with an imperative verb: Add, Fix, Update, Remove, Refactor, etc.',
+        },
+      };
     }
 
     return {
+      valid: true,
+      subject,
+      issue_id: issueMatch[1],
+      description,
+    };
+  }
+
+  // Check if it looks like the old slash format (common mistake)
+  if (/^[A-Z][A-Z0-9]+-\d+\//.test(subject)) {
+    return {
       valid: false,
       subject,
-      errors,
+      errors: [
+        'Commit message uses the branch naming format (slashes) instead of the commit message format (colon).',
+        'Branch format: ISSUE-ID/<type>/<kebab-description>',
+        'Commit format: ISSUE-ID: <Imperative mood description>',
+      ],
       instructions: {
-        format: '<JIRA-ID>/<TYPE>/<description-kebab-case>',
-        valid_types: VALID_TYPES,
-        examples: ['PROJ-123/feat/add-user-authentication', 'BILLING-456/fix/invoice-rounding-error'],
-        tip: 'If the JIRA issue ID is unknown, ask the user with the AskUserQuestion tool.',
+        format: '<ISSUE-ID>: <Imperative mood description>',
+        examples: ['PROJ-123: Add user authentication', 'BILLING-456: Fix invoice rounding error'],
+        tip: 'Use a colon after the issue ID, not slashes. The type (feat/fix/etc.) belongs in the branch name, not the commit message.',
       },
     };
   }
 
+  // Try matching without issue ID (valid when user has no issue number)
+  if (COMMIT_WITHOUT_ISSUE.test(subject)) {
+    return {
+      valid: true,
+      subject,
+      issue_id: null,
+      description: subject,
+    };
+  }
+
+  // Invalid format
+  const errors = [];
+
+  if (/^[A-Z][A-Z0-9]+-\d+[^:]/.test(subject)) {
+    errors.push('Found an issue ID but missing colon separator. Use "ISSUE-ID: Description".');
+  } else if (/^[a-z]/.test(subject)) {
+    errors.push('Subject must start with an uppercase letter (imperative mood, e.g., "Add", "Fix", "Update").');
+  } else {
+    errors.push('Expected format: <ISSUE-ID>: <Imperative mood description>');
+  }
+
   return {
-    valid: true,
+    valid: false,
     subject,
-    jira_id: match[1],
-    type: match[2],
-    description: match[3]
+    errors,
+    instructions: {
+      format: '<ISSUE-ID>: <Imperative mood description>',
+      format_no_issue: '<Imperative mood description>',
+      examples: [
+        'PROJ-123: Add user authentication',
+        'BILLING-456: Fix invoice rounding error',
+        'Add user authentication  (no issue)',
+      ],
+      tip: 'If the issue ID is unknown, ask the user with the AskUserQuestion tool.',
+    },
   };
 }
 
@@ -82,12 +122,13 @@ function printUsage() {
   console.log('Usage: validate-commit-message.mjs <message>');
   console.log('       validate-commit-message.mjs --check-last');
   console.log('');
-  console.log(`Valid types: ${VALID_TYPES.join(', ')}`);
-  console.log('Format: <JIRA-ID>/<TYPE>/<description-kebab-case>');
+  console.log('Format: <ISSUE-ID>: <Imperative mood description>');
+  console.log('   or:  <Imperative mood description>  (no issue)');
   console.log('');
   console.log('Examples:');
-  console.log('  PROJ-123/feat/add-user-authentication');
-  console.log('  BILLING-456/fix/invoice-rounding-error');
+  console.log('  PROJ-123: Add user authentication');
+  console.log('  BILLING-456: Fix invoice rounding error');
+  console.log('  Add user authentication');
 }
 
 // Parse args

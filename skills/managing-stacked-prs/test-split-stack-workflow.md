@@ -136,7 +136,7 @@ docker compose exec <service> npm run jest -- <test-file-1> <test-file-2>
 
 ```bash
 git add <specific-files>
-git commit -m "<JIRA-ID>/fix/update-test-types-for-new-interfaces"
+git commit -m "<ISSUE-ID>: Update test types for new interfaces"
 
 # Cascade rebase the tests branch
 git rebase --onto <implementation-branch> <implementation-branch>@{1} <tests-branch>
@@ -174,7 +174,7 @@ describe.skip('generates heartbeat with tracking field', () => {
 Commit this on the implementation branch with a clear message:
 
 ```bash
-git commit -m "<JIRA-ID>/chore/skip-tests-rewritten-in-tests-pr"
+git commit -m "<ISSUE-ID>: Skip tests rewritten in tests PR"
 ```
 
 ### Option B: Collapse the stack
