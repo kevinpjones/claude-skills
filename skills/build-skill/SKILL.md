@@ -1,5 +1,5 @@
 ---
-name: building-skills
+name: build-skill
 description: Use this skill when creating new Claude Code skills from scratch, editing existing skills to improve their descriptions or structure, converting Claude Code sub-agents to skills, or extracting skills from Claude Code session history. This includes designing skill workflows, writing SKILL.md files, organizing supporting files with intention-revealing names, leveraging CLI tools and Node.js scripting, and browsing session JSONL files to identify and extract reusable skill candidates.
 ---
 
@@ -100,8 +100,8 @@ All fields are optional. Only `description` is recommended so Claude knows when 
 
 ## Critical Requirements
 
-- **name**: Use gerund form (verb + -ing), lowercase, hyphens only, max 64 chars
-  - Good: `processing-pdfs`, `analyzing-spreadsheets`, `deploying-lambdas`
+- **name**: Use imperative mood (base verb form), lowercase, hyphens only, max 64 chars
+  - Good: `process-pdf`, `analyze-spreadsheet`, `deploy-lambda`
   - Bad: `pdf-helper`, `spreadsheet-utils`, `lambda-tool`
 - **description**: THE MOST CRITICAL field - determines when Claude invokes the skill
   - Must clearly describe the skill's purpose AND when to use it
@@ -132,7 +132,7 @@ Ask the user:
 ## 2. Design the Skill
 
 Based on requirements:
-- Choose a gerund-form name (e.g., `analyzing-csv-data`, not `csv-analyzer`)
+- Choose an imperative-mood name (e.g., `analyze-csv-data`, not `csv-analyzer`)
 - Draft a compelling description in third person that clearly indicates when to invoke
 - Plan the instruction structure focusing on CLI and Node.js workflows
 - Consider what supporting files need intention-revealing names
@@ -172,7 +172,7 @@ const execAsync = promisify(exec);
 ## 5. Validate
 
 Check:
-- Name uses gerund form and follows conventions (max 64 chars)
+- Name uses imperative mood and follows conventions (max 64 chars)
 - Description is clear, concise, trigger-focused, and in third person
 - YAML frontmatter is properly formatted
 - Instructions are actionable and complete
@@ -294,8 +294,8 @@ Examples:
 ## Naming Conventions
 
 **Skills:**
-- Use gerund form (verb + -ing)
-- Examples: `processing-pdfs`, `analyzing-data`, `deploying-services`
+- Use imperative mood (base verb form)
+- Examples: `process-pdf`, `analyze-data`, `deploy-service`
 
 **Supporting Files:**
 - Use intention-revealing names

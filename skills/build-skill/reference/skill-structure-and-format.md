@@ -128,7 +128,7 @@ See `./reference/validation-checklist.md` for complete checklist.
 ## Multi-File Organization Example
 
 ```
-analyzing-data/
+analyze-data/
 ├── SKILL.md                           # Core workflow (~150 lines)
 ├── reference/
 │   ├── data-processing-patterns.md    # Detailed examples

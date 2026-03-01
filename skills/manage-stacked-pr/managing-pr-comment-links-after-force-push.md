@@ -18,7 +18,7 @@ After force pushing, that commit hash no longer exists on the branch. The link b
 Use the update script to find and fix comment links for a PR:
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
 ```
 
 The script:
@@ -66,9 +66,9 @@ If the automated approach doesn't work (e.g., commit messages changed during reb
 For multiple PRs in a stack, run the update script for each PR:
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs owner repo 42
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs owner repo 43
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs owner repo 44
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs owner repo 42
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs owner repo 43
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs owner repo 44
 ```
 
 ## Batching GraphQL Mutations

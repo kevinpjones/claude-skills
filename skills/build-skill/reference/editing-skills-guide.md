@@ -264,7 +264,7 @@ Before making changes:
 After editing:
 - [ ] YAML frontmatter is valid (no syntax errors)
 - [ ] Description is under 1024 characters
-- [ ] Name follows gerund form convention
+- [ ] Name follows imperative mood convention
 - [ ] SKILL.md is under 500 lines (ideally)
 - [ ] All relative paths (./file.md) are correct
 - [ ] Supporting files have intention-revealing names
@@ -458,7 +458,7 @@ After editing:
 | Unclear structure | Reorganize with hierarchy | SKILL.md |
 | No CLI tools | Add CLI commands section | SKILL.md or reference/cli-patterns.md |
 | Outdated commands | Update to current versions | SKILL.md + reference files |
-| Generic name | Change to gerund form | SKILL.md (name field) |
+| Generic name | Change to imperative mood | SKILL.md (name field) |
 | Verbose explanation | Challenge necessity, condense or remove | SKILL.md |
 
 ## Iterative Improvement

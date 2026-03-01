@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Prerequisite checker for the addressing-pr-comments skill.
+ * Prerequisite checker for the address-pr-comments skill.
  * Verifies gh CLI is installed and authenticated.
  *
  * Usage: node check-prerequisites.mjs
@@ -53,7 +53,7 @@ async function checkJqInstalled() {
 }
 
 async function main() {
-  console.log('Checking prerequisites for addressing-pr-comments skill...\n');
+  console.log('Checking prerequisites for address-pr-comments skill...\n');
 
   const results = {
     gh: await checkGhInstalled(),

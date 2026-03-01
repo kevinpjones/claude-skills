@@ -5,7 +5,7 @@ Create GitHub PRs with each targeting its parent branch, including a stack navig
 ## Step 1: Detect Stack and Ensure Branches Are Pushed
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
+~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs
 # Push any unpushed branches
 git push -u origin <branch-name>
 ```
@@ -70,4 +70,4 @@ EOF
 
 After all PRs are created, update each PR body with actual PR numbers using `gh pr edit <number> --body "..."`. Replace `#TBD` placeholders with real PR numbers.
 
-Use the `updating-pr-description` skill for richer Problem/Solution content.
+Use the `update-pr-description` skill for richer Problem/Solution content.

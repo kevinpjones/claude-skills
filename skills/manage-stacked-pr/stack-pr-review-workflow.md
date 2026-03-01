@@ -12,7 +12,7 @@ When working with stacked PRs, review comments may exist across multiple PRs. Th
 
 - Stack is detected and all PRs are created
 - GitHub CLI (`gh`) is authenticated
-- The `addressing-pr-comments` skill scripts are available
+- The `address-pr-comments` skill scripts are available
 
 ## Full Workflow
 
@@ -25,7 +25,7 @@ OWNER=$(echo $REPO_INFO | cut -d' ' -f1)
 REPO=$(echo $REPO_INFO | cut -d' ' -f2)
 
 # Detect the stack structure
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
+~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs
 ```
 
 ### Step 2: Map Branches to PR Numbers
@@ -40,7 +40,7 @@ Match each stack branch to its PR number. Store this mapping for later use.
 ### Step 3: Fetch All Unresolved Comments
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
+~/.claude/skills/manage-stacked-pr/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
 ```
 
 This returns a JSON structure grouping unresolved threads by PR.
@@ -72,7 +72,7 @@ git checkout PROJ-123/feat/user-model
 
 #### 5b. Process Each Comment on This Branch
 
-For each unresolved thread, follow the same pattern as the `addressing-pr-comments` skill:
+For each unresolved thread, follow the same pattern as the `address-pr-comments` skill:
 
 1. **Display** comment details (file, line range, author, body)
 2. **Read** the referenced code
@@ -99,7 +99,7 @@ git commit -m "<ISSUE-ID>: Address review feedback"
 
 Validate the commit message:
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/validate-commit-message.mjs --check-last
+~/.claude/skills/manage-stacked-pr/scripts/validate-commit-message.mjs --check-last
 ```
 
 #### 5e. Rebase All Branches Above
@@ -132,7 +132,7 @@ For each comment that was addressed:
 SHORT=$(git log -1 --format=%h)
 FULL=$(git log -1 --format=%H)
 
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs \
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs \
   --commit $SHORT $FULL $OWNER $REPO <pr_number> --resolve <thread_id>
 ```
 
@@ -148,7 +148,7 @@ After all comments are addressed:
 
 ```bash
 # Re-fetch comments to verify all are resolved
-~/.claude/skills/managing-stacked-prs/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
+~/.claude/skills/manage-stacked-pr/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
 ```
 
 The `total_unresolved` should be 0.
@@ -180,10 +180,10 @@ Fixed in [abc1234](commit-link) on branch `PROJ-123/feat/user-model`. The change
 
 When the user decides not to adopt feedback:
 
-1. Draft a professional justification (see addressing-pr-comments skill for examples)
+1. Draft a professional justification (see address-pr-comments skill for examples)
 2. Use the respond script to reply:
    ```bash
-   ~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs \
+   ~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs \
      --reply "Thanks for the suggestion! We intentionally..." <thread_id>
    ```
 3. Ask user whether to resolve the thread or leave it open for discussion

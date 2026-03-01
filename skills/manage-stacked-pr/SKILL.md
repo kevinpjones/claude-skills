@@ -1,5 +1,5 @@
 ---
-name: managing-stacked-prs
+name: manage-stacked-pr
 description: Use this skill when creating, managing, or working with stacked pull requests using native git and GitHub CLI. This includes initializing PR stacks, adding branches to a stack, adopting existing stacked branches and PRs, rebasing stacked branches, force pushing stack branches safely, creating PRs with correct base branch targets, addressing review feedback across a stack, managing stack metadata via commit trailers, checking CI status across a PR stack, squash-merging stacked PRs in order, and managing test-split stacks where tests are separated from implementation. Trigger keywords include "stacked PRs", "PR stack", "stack branches", "stacked pull requests", "rebase stack", "stack review comments", "adopt stack", "import stack", "existing stack", "CI status", "check status", "failing checks", "required checks", "stack CI", "split tests", "test branch", "collapse stack", "merge stack", "squash merge stack", "merge PRs in order", "merge all PRs".
 ---
 
@@ -41,8 +41,8 @@ Operations like rebasing, merging, and creating PRs proceed **bottom-to-top** �
 3. Must be in a git repository with a remote.
 
 4. **Companion skills** (some workflows reference these):
-   - `addressing-pr-comments` — for replying to and resolving PR review threads
-   - `updating-pr-description` — for writing PR descriptions in Problem/Solution format
+   - `address-pr-comments` — for replying to and resolving PR review threads
+   - `update-pr-description` — for writing PR descriptions in Problem/Solution format
 
 ## Stack Metadata Format
 
@@ -101,7 +101,7 @@ All commit message subjects MUST follow: `<ISSUE-ID>: <Imperative mood descripti
 
 Validate before committing:
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/validate-commit-message.mjs "PROJ-123: Add user model"
+~/.claude/skills/manage-stacked-pr/scripts/validate-commit-message.mjs "PROJ-123: Add user model"
 ```
 
 If the issue ID is unknown, prompt the user with the AskUserQuestion tool.
@@ -146,7 +146,7 @@ git commit -m "PROJ-123: Add user model" \
 
 Validate:
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/validate-commit-message.mjs --check-last
+~/.claude/skills/manage-stacked-pr/scripts/validate-commit-message.mjs --check-last
 ```
 
 ### Step 4: Push
@@ -162,7 +162,7 @@ git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 ### Step 1: Detect Current Stack
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
+~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs
 ```
 
 The script outputs the stack structure and `instructions.next_steps.add_branch` with the exact command to create the next branch.
@@ -313,7 +313,7 @@ git push --force-with-lease origin branch-1 branch-2 branch-3
 Force pushes invalidate commit hashes in "Resolved by [hash](link)" comment replies. Update them for each affected PR:
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
 ```
 
 The script outputs `instructions.tip` for handling multiple PRs. See `./managing-pr-comment-links-after-force-push.md` for manual fallback.
@@ -338,11 +338,11 @@ OWNER=$(echo $REPO_INFO | cut -d' ' -f1)
 REPO=$(echo $REPO_INFO | cut -d' ' -f2)
 
 # Detect stack and get PR numbers
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
+~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs
 gh pr list --json number,headRefName -q '.[] | "\(.headRefName) \(.number)"'
 
 # Fetch all unresolved comments
-~/.claude/skills/managing-stacked-prs/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
+~/.claude/skills/manage-stacked-pr/scripts/fetch-stack-pr-comments.mjs $OWNER $REPO <pr1> <pr2> <pr3>
 ```
 
 The fetch script outputs `instructions.workflow` with the complete bottom-up processing steps. Follow those instructions to address, rebase, push, and resolve threads.
@@ -357,10 +357,10 @@ Import existing stacked branches that already have PRs but lack stack metadata t
 
 ```bash
 # From a PR number
-~/.claude/skills/managing-stacked-prs/scripts/adopt-stack.mjs 42
+~/.claude/skills/manage-stacked-pr/scripts/adopt-stack.mjs 42
 
 # From a branch name
-~/.claude/skills/managing-stacked-prs/scripts/adopt-stack.mjs --branch feature-auth-login
+~/.claude/skills/manage-stacked-pr/scripts/adopt-stack.mjs --branch feature-auth-login
 ```
 
 The script discovers the full stack by walking the GitHub PR chain and outputs:
@@ -387,7 +387,7 @@ git commit --allow-empty --no-verify -m "chore: adopt into stack" \
 Check CI status across all PRs in the stack, distinguishing required from optional checks.
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/check-stack-ci-status.mjs <pr1> <pr2> <pr3>
+~/.claude/skills/manage-stacked-pr/scripts/check-stack-ci-status.mjs <pr1> <pr2> <pr3>
 ```
 
 The script outputs per-PR check summaries and a stack-level status. Follow `instructions.blocking` to identify which PRs have failing required checks. Optional failures are listed in `instructions.non_blocking`.
@@ -428,7 +428,7 @@ For the full step-by-step procedure, complete 4-PR example, and recovery from ac
 
 ## Scripts Reference
 
-All scripts are in `~/.claude/skills/managing-stacked-prs/scripts/` and are directly executable (no `node` prefix needed).
+All scripts are in `~/.claude/skills/manage-stacked-pr/scripts/` and are directly executable (no `node` prefix needed).
 
 | Script | Purpose |
 |--------|---------|
@@ -439,7 +439,7 @@ All scripts are in `~/.claude/skills/managing-stacked-prs/scripts/` and are dire
 | `update-pr-comment-links.mjs` | Fix commit links in PR comments after force push |
 | `check-stack-ci-status.mjs` | Check CI status across all PRs in a stack |
 
-**Shared scripts** from the `addressing-pr-comments` skill:
+**Shared scripts** from the `address-pr-comments` skill:
 
 | Script | Purpose |
 |--------|---------|

@@ -9,7 +9,7 @@ Merge all PRs in a stack sequentially from bottom (first PR, targeting `main`) t
 ## Step 1: Verify All PRs Are Approved
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/check-stack-ci-status.mjs <pr1> <pr2> <pr3>
+~/.claude/skills/manage-stacked-pr/scripts/check-stack-ci-status.mjs <pr1> <pr2> <pr3>
 gh pr view <pr1> --json reviewDecision -q '.reviewDecision'
 gh pr view <pr2> --json reviewDecision -q '.reviewDecision'
 ```

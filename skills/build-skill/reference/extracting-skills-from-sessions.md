@@ -219,7 +219,7 @@ Look for:
 
 Follow the standard skill creation process:
 
-1. Choose a gerund-form name
+1. Choose an imperative-mood name
 2. Write a description with trigger keywords
 3. Organize into SKILL.md + supporting files
 4. Add the CLI commands and scripts from the conversation
@@ -240,7 +240,7 @@ The original conversation is your first test case:
 
 **Extracted into**:
 ```
-addressing-pr-comments/
+address-pr-comments/
 ├── SKILL.md (workflow overview, triggers, step-by-step)
 ├── reference/
 │   └── graphql-queries.md (the GraphQL queries for fetching/resolving threads)

@@ -100,16 +100,16 @@ Skill: "Use this skill when reviewing code for quality issues, security vulnerab
 - `debugger`
 - `data-scientist`
 
-**Skill Names** (gerund form - verb + -ing):
-- `reviewing-code` (not `code-reviewer`)
-- `debugging-applications` (not `debugger`)
-- `analyzing-data` (not `data-scientist`)
+**Skill Names** (imperative mood - base verb form):
+- `review-code` (not `code-reviewer`)
+- `debug-application` (not `debugger`)
+- `analyze-data` (not `data-scientist`)
 
 Verify:
 - Lowercase only
 - Hyphens for word separation
 - Max 64 characters
-- Gerund form preferred
+- Imperative mood preferred
 
 ### 3. Content Transformation
 
@@ -177,11 +177,11 @@ Review the code and provide clear, actionable feedback prioritized by severity.
 
 **Converted Skill:**
 
-File: `~/.claude/skills/reviewing-code/SKILL.md`
+File: `~/.claude/skills/review-code/SKILL.md`
 
 ```yaml
 ---
-name: reviewing-code
+name: review-code
 description: Use this skill when reviewing code for quality issues, security vulnerabilities, performance problems, or best practices violations. This includes analyzing pull requests, auditing codebases, validating new implementations, checking for code smells, or providing feedback on code maintainability.
 ---
 
@@ -245,7 +245,7 @@ See `./code-review-checklist.md` for comprehensive review criteria.
 ```
 
 **Key Changes:**
-1. Name: `code-reviewer` → `reviewing-code` (gerund form)
+1. Name: `code-reviewer` → `review-code` (imperative mood)
 2. Description: Expanded with trigger keywords and use cases
 3. Removed: `tools` field (use `allowed-tools` if tool restrictions needed)
 4. Enhanced: Added CLI tool suggestions
@@ -272,11 +272,11 @@ Be precise and efficient.
 
 **Converted Skill:**
 
-File: `~/.claude/skills/debugging-applications/SKILL.md`
+File: `~/.claude/skills/debug-application/SKILL.md`
 
 ```yaml
 ---
-name: debugging-applications
+name: debug-application
 description: Use this skill when debugging application errors, analyzing stack traces, identifying root causes of failures, fixing runtime issues, or resolving build problems. This includes investigating exception messages, tracking down bug sources, and recommending minimal fixes.
 ---
 
@@ -351,7 +351,7 @@ const userName = user?.name || 'Unknown';
 ```
 
 **Key Changes:**
-1. Name: `debugger` → `debugging-applications` (gerund, more specific)
+1. Name: `debugger` → `debug-application` (imperative mood, more specific)
 2. Description: Added specific debugging triggers and keywords
 3. Converted: `model` can be kept if desired; `tools` becomes `allowed-tools`
 4. Enhanced: CLI debugging tools section
@@ -376,11 +376,11 @@ You are a data scientist. Help users:
 
 **Converted Skill:**
 
-File: `~/.claude/skills/analyzing-data/SKILL.md`
+File: `~/.claude/skills/analyze-data/SKILL.md`
 
 ```yaml
 ---
-name: analyzing-data
+name: analyze-data
 description: Use this skill when analyzing datasets, writing SQL queries, exploring data patterns, generating statistical insights, creating data visualizations, or transforming data files. This includes working with CSV files, JSON data, database queries, and data aggregation tasks.
 ---
 
@@ -477,7 +477,7 @@ See `./data-processing-patterns.md` for more examples.
 ```
 
 **Key Changes:**
-1. Name: `data-scientist` → `analyzing-data` (gerund, more general)
+1. Name: `data-scientist` → `analyze-data` (imperative mood, more general)
 2. Description: Comprehensive with data-related trigger keywords
 3. Converted: `model` can be kept if desired; `tools` removed (no restrictions needed)
 4. Enhanced: Heavy emphasis on CLI tools and Node.js
@@ -493,7 +493,7 @@ Use this checklist when converting any sub-agent to a skill:
 - [ ] Review official documentation (URLs at top of this file)
 - [ ] Identify core expertise and capabilities
 - [ ] Extract trigger keywords and use cases from agent description
-- [ ] Choose gerund-form skill name (e.g., `processing-data`, not `data-processor`)
+- [ ] Choose imperative-mood skill name (e.g., `process-data`, not `data-processor`)
 - [ ] Write new description with invocation triggers in third person
 - [ ] Remove `tools` field (convert to `allowed-tools` if needed); keep `model` if desired
 - [ ] Copy core instructions and domain expertise
@@ -519,7 +519,7 @@ After conversion, verify:
 2. **YAML Syntax**
    - No `tools` field (use `allowed-tools` if needed)
    - Description under 1024 characters
-   - Name in gerund form, max 64 characters
+   - Name in imperative mood, max 64 characters
    - No tabs (use spaces)
 
 3. **Invocation Testing**
@@ -588,7 +588,7 @@ After conversion, verify:
 For complex sub-agents, organize into multiple files:
 
 ```
-analyzing-data/
+analyze-data/
 ├── SKILL.md (overview and primary workflow)
 ├── data-processing-patterns.md (detailed examples)
 ├── sql-optimization-guide.md (query best practices)
@@ -618,7 +618,7 @@ This enables progressive disclosure:
 2. **Description is critical** - Spend time on invocation triggers
 3. **Preserve expertise** - Don't lose the sub-agent's domain knowledge
 4. **Keep examples** - They're invaluable for understanding
-5. **Use gerund names** - `processing-data`, not `data-processor`
+5. **Use imperative mood names** - `process-data`, not `data-processor`
 6. **Convert agent fields** - `tools` becomes `allowed-tools`; `model` is valid for skills
 7. **Emphasize CLI/Node** - Show modern tooling approaches
 8. **Intention-revealing names** - For all supporting files

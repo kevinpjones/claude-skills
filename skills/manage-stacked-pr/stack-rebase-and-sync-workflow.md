@@ -61,7 +61,7 @@ git rebase --onto old-branch-1 old-branch-1@{1} old-branch-2
 ### Step 1: Detect the Stack
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs
+~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs
 ```
 
 ### Step 2: Identify the Starting Point
@@ -118,7 +118,7 @@ git push --force-with-lease origin branch-1 branch-2 branch-3
 Force pushes invalidate commit hashes in PR reply comments. If you've previously posted "Resolved by [hash](link)" comments, update them:
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
 ```
 
 See `./managing-pr-comment-links-after-force-push.md` for details.

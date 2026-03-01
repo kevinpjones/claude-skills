@@ -97,7 +97,7 @@ git checkout <implementation-branch>
 ### Step 2: Identify failures
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/check-stack-ci-status.mjs <pr1> <pr2>
+~/.claude/skills/manage-stacked-pr/scripts/check-stack-ci-status.mjs <pr1> <pr2>
 # Then fetch CI logs for failing checks
 gh run view <run-id> --log-failed 2>&1 | tail -80
 ```
@@ -152,8 +152,8 @@ git push --force-with-lease origin <implementation-branch> <tests-branch>
 ### Step 7: Update PR comment links
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs <owner> <repo> <impl-pr>
-~/.claude/skills/managing-stacked-prs/scripts/update-pr-comment-links.mjs <owner> <repo> <tests-pr>
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <impl-pr>
+~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <tests-pr>
 ```
 
 ## Handling Category 2 Failures
@@ -213,7 +213,7 @@ git reset --hard origin/<implementation-branch>
 ### Step 4: Verify CI
 
 ```bash
-~/.claude/skills/managing-stacked-prs/scripts/check-stack-ci-status.mjs <remaining-pr-numbers>
+~/.claude/skills/manage-stacked-pr/scripts/check-stack-ci-status.mjs <remaining-pr-numbers>
 ```
 
 The stack is now reduced by one layer. The implementation PR contains both code and tests.

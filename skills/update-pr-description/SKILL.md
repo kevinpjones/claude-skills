@@ -1,5 +1,5 @@
 ---
-name: updating-pr-description
+name: update-pr-description
 description: Use this skill when updating, writing, or populating a GitHub pull request description. This includes describing PR changes in problem/solution format, enhancing existing PR summaries, or filling in the description section of a PR template. Trigger keywords include "update PR description", "describe PR", "PR summary", "pull request description", "fill in PR", "write PR description".
 argument-hint: [pr-number]
 ---

@@ -1,5 +1,5 @@
 ---
-name: addressing-pr-comments
+name: address-pr-comments
 description: Use this skill when addressing, resolving, or working through PR review comments. This includes checking out a PR branch, fetching unresolved review threads, making code changes to address feedback, committing fixes, adding reply comments, and resolving threads. Trigger keywords include "PR comments", "review feedback", "address feedback", "resolve comments", "fix PR", "review threads".
 argument-hint: "[PR link or number (optional if on PR branch)]"
 ---
@@ -84,7 +84,7 @@ Store these values for use in subsequent API calls.
 Run the fetch script to get all unresolved review threads:
 
 ```bash
-~/.claude/skills/addressing-pr-comments/scripts/fetch-unresolved-threads.mjs <OWNER> <REPO> <PR_NUMBER>
+~/.claude/skills/address-pr-comments/scripts/fetch-unresolved-threads.mjs <OWNER> <REPO> <PR_NUMBER>
 ```
 
 The script outputs a JSON array with each thread containing:
@@ -143,10 +143,10 @@ When the user decides not to adopt the feedback but wants to reply with an expla
 
 ```bash
 # Reply only (leave thread open)
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs --reply "Your justification here" <THREAD_ID>
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs --reply "Your justification here" <THREAD_ID>
 
 # Reply and resolve
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs --reply "Your justification here" --resolve <THREAD_ID>
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs --reply "Your justification here" --resolve <THREAD_ID>
 ```
 
 **Example justifications:**
@@ -199,13 +199,13 @@ Run the respond script with the appropriate flags based on user's choice:
 
 ```bash
 # Reply and resolve (most common)
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> --resolve <THREAD_ID>
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> --resolve <THREAD_ID>
 
 # Reply only
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> <THREAD_ID>
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> <THREAD_ID>
 
 # Resolve only
-~/.claude/skills/addressing-pr-comments/scripts/respond-to-thread.mjs --resolve <THREAD_ID>
+~/.claude/skills/address-pr-comments/scripts/respond-to-thread.mjs --resolve <THREAD_ID>
 ```
 
 ### 4i. Continue to Next Comment

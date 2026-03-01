@@ -1,5 +1,5 @@
 ---
-name: initializing-memory-bank-projects
+name: initialize-memory-bank-project
 description: Use this skill when creating a new Memory Bank project, initializing a project in the memory bank, or onboarding a codebase into the memory bank system. This includes setting up project documentation structure, conducting codebase analysis, gathering requirements through interviews, and populating core memory bank files. Trigger keywords include "new memory bank project", "initialize project", "onboard project", "set up memory bank", "create project in memory bank", "new project", "start project", "memory bank setup", "project initialization".
 ---
 

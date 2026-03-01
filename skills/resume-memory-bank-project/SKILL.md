@@ -1,5 +1,5 @@
 ---
-name: resuming-memory-bank-projects
+name: resume-memory-bank-project
 description: Use this skill when resuming work on an existing Memory Bank project, loading project context at the start of a session, or re-familiarizing with a project after time away. This includes reviewing memory bank files, validating context integrity, assessing current state, identifying next steps, and generating an implementation plan. Trigger keywords include "resume project", "load project", "continue project", "pick up where I left off", "resume memory bank", "what was I working on", "project status", "get back to project", "reload project context".
 argument-hint: "[project-name] [initial-focus]"
 context: fork
@@ -46,7 +46,7 @@ Parse `$ARGUMENTS` to extract the project name and optional initial focus:
 1. **Project name** (first argument) — this is REQUIRED. If not provided, ask the user and stop.
 2. **Initial focus** (remaining arguments after the project name) — optional user-specified next steps
 
-Example: `/resuming-memory-bank-projects my-project fix the auth bug`
+Example: `/resume-memory-bank-project my-project fix the auth bug`
 → projectName = `my-project`, initialFocus = `fix the auth bug`
 
 **Store the project name now. Every MCP call you make MUST use this exact project name. Do not substitute or switch to a different project.**

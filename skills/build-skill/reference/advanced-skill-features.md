@@ -37,7 +37,7 @@ When a user invokes a skill with arguments (e.g., `/my-skill arg1 arg2`), the ar
 
 ```markdown
 ---
-name: checking-pr
+name: check-pr
 description: Use this skill when reviewing a specific pull request by number.
 argument-hint: "[PR-number]"
 ---
@@ -116,7 +116,7 @@ The `context: fork` frontmatter field causes a skill to execute in a separate su
 
 ```yaml
 ---
-name: analyzing-test-coverage
+name: analyze-test-coverage
 description: Use this skill when analyzing test coverage reports or identifying untested code paths.
 context: fork
 agent: code-coverage-reviewer
@@ -155,7 +155,7 @@ Skills can be installed at multiple levels. When skills with the same name exist
 
 ### Implications
 
-- A personal skill named `deploying-services` overrides a project skill with the same name
+- A personal skill named `deploy-service` overrides a project skill with the same name
 - Enterprise skills cannot be overridden
 - Use unique, specific names to avoid unintended collisions
 - Project skills are version-controlled and shared; personal skills are private
@@ -185,14 +185,14 @@ Skills are discovered from:
 ```
 my-monorepo/
 ├── .claude/skills/
-│   └── deploying-services/SKILL.md     # Shared across monorepo
+│   └── deploy-service/SKILL.md          # Shared across monorepo
 ├── packages/
 │   ├── frontend/
 │   │   └── .claude/skills/
-│   │       └── building-ui/SKILL.md     # Frontend-specific
+│   │       └── build-ui/SKILL.md        # Frontend-specific
 │   └── backend/
 │       └── .claude/skills/
-│           └── managing-api/SKILL.md    # Backend-specific
+│           └── manage-api/SKILL.md      # Backend-specific
 ```
 
 ### Tips

@@ -329,14 +329,14 @@ Show how to use them in workflows.
 
 ## Naming Best Practices
 
-### Skill Names - Gerund Form
+### Skill Names - Imperative Mood
 
-**Format:** verb + -ing
+**Format:** base verb form (command style)
 
 **Examples:**
-- ✅ `processing-pdfs`
-- ✅ `analyzing-data`
-- ✅ `deploying-lambdas`
+- ✅ `process-pdf`
+- ✅ `analyze-data`
+- ✅ `deploy-lambda`
 - ❌ `pdf-processor`
 - ❌ `data-analyzer`
 - ❌ `lambda-deployer`
@@ -355,7 +355,7 @@ Show how to use them in workflows.
 
 **Checklist:**
 - [ ] YAML syntax valid (no tabs, proper quotes)
-- [ ] Name in gerund form, <64 chars
+- [ ] Name in imperative mood, <64 chars
 - [ ] Description starts with "Use this skill when...", <1024 chars
 - [ ] No `tools` field (legacy sub-agent field)
 - [ ] SKILL.md under 500 lines
@@ -550,7 +550,7 @@ Creating or editing a skill? Check these:
 - [ ] Intention-revealing file names
 
 **Metadata:**
-- [ ] Name in gerund form, <64 chars
+- [ ] Name in imperative mood, <64 chars
 - [ ] Description starts with "Use this skill when..."
 - [ ] Description includes 5+ trigger keywords
 - [ ] Description <1024 chars

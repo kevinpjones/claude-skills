@@ -17,18 +17,18 @@ The YAML frontmatter in SKILL.md contains two critical fields that determine how
 - **No XML tags:** Plain text only
 - **No reserved words:** Avoid "anthropic", "claude", "skill"
 
-**Naming Convention - Gerund Form (verb + -ing):**
+**Naming Convention - Imperative Mood (base verb form):**
 
-Use action-oriented names that describe what the skill does:
+Use command-oriented names that describe the action the skill performs:
 
 **Good Examples:**
-- `processing-pdfs` (not `pdf-processor`)
-- `analyzing-spreadsheets` (not `spreadsheet-analyzer`)
-- `deploying-lambdas` (not `lambda-deployer`)
-- `reviewing-code` (not `code-reviewer`)
-- `debugging-applications` (not `debugger`)
-- `managing-databases` (not `database-manager`)
-- `transforming-data` (not `data-transformer`)
+- `process-pdf` (not `pdf-processor`)
+- `analyze-spreadsheet` (not `spreadsheet-analyzer`)
+- `deploy-lambda` (not `lambda-deployer`)
+- `review-code` (not `code-reviewer`)
+- `debug-application` (not `debugger`)
+- `manage-database` (not `database-manager`)
+- `transform-data` (not `data-transformer`)
 
 **Bad Examples (avoid noun forms):**
 - `pdf-helper`
@@ -37,11 +37,11 @@ Use action-oriented names that describe what the skill does:
 - `code-review`
 - `debug-agent`
 
-**Why Gerund Form?**
-- Describes ongoing action/capability
-- More intuitive for invocation matching
-- Consistent with skill-as-capability mental model
-- Aligns with "what is this skill doing?" question
+**Why Imperative Mood?**
+- Reads like a command: "do this"
+- Natural fit for slash-command invocation (`/deploy-lambda`)
+- Consistent with CLI naming conventions
+- Aligns with "what should this skill do?" question
 
 ## Description Field
 
@@ -173,7 +173,7 @@ Ask yourself:
 
 Before finalizing metadata:
 
-- [ ] Name is in gerund form (verb + -ing)
+- [ ] Name is in imperative mood (base verb form)
 - [ ] Name is lowercase with hyphens only
 - [ ] Name is under 64 characters
 - [ ] Description starts with "Use this skill when..."
@@ -190,7 +190,7 @@ Before finalizing metadata:
 
 ```yaml
 ---
-name: documenting-sendgrid-templates
+name: document-sendgrid-template
 description: Use this skill when generating business-focused documentation for SendGrid email templates by analyzing AWS Lambda configurations and codebase usage. This includes translating technical implementations into business rules, extracting trigger conditions, documenting data fields, and creating comprehensive template documentation. Invoke when working with SendGrid template IDs, email template documentation, or Lambda email sending logic.
 ---
 ```
@@ -199,7 +199,7 @@ description: Use this skill when generating business-focused documentation for S
 
 ```yaml
 ---
-name: analyzing-csv-data
+name: analyze-csv-data
 description: Use this skill when working with CSV files using xsv CLI tool, including exploring structure, filtering data, selecting columns, transforming files, sorting, joining datasets, or performing tabular data analysis. Invoke when users mention CSV files with operations like explore, filter, select, transform, sort, or join.
 ---
 ```
@@ -208,7 +208,7 @@ description: Use this skill when working with CSV files using xsv CLI tool, incl
 
 ```yaml
 ---
-name: creating-github-workflows
+name: create-github-workflow
 description: Use this skill when creating or debugging GitHub Actions workflows, writing workflow YAML files, configuring CI/CD pipelines, managing GitHub secrets, troubleshooting workflow failures, or optimizing workflow performance. This includes working with actions marketplace, custom actions, matrix strategies, and deployment workflows. Invoke for GitHub Actions automation, continuous integration, or deployment pipeline tasks.
 ---
 ```

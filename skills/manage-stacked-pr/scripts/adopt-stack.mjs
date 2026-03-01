@@ -208,7 +208,7 @@ async function discoverStack(startPR) {
         '2. Run: git fetch origin',
         '3. For each branch (bottom to top), run the adoption_commands above, replacing STACK_NAME with the chosen name.',
         `4. Push all branches: ${pushCommand}`,
-        '5. Verify adoption: ~/.claude/skills/managing-stacked-prs/scripts/detect-stack.mjs',
+        '5. Verify adoption: ~/.claude/skills/manage-stacked-pr/scripts/detect-stack.mjs',
       ],
     },
   };
