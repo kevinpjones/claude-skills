@@ -34,7 +34,9 @@ Every skill requires a directory with a `SKILL.md` file:
 ```
 skill-name/
 ├── SKILL.md (required)
-├── processing-details.md (optional - use intention-revealing names!)
+├── reference/ (optional - reference markdown docs go here)
+│   ├── processing-details.md
+│   └── advanced-patterns.md
 ├── scripts/ (optional)
 │   └── process-data.js (Node.js preferred)
 └── templates/ (optional)
@@ -42,10 +44,11 @@ skill-name/
 ```
 
 **Important File Naming Conventions:**
+- **Reference markdown docs always go in a `reference/` subdirectory** — never at the skill root
 - Use intention-revealing names for all supporting files
-- Examples: `./converting-sub-agents.md`, `./aws-deployment-patterns.md`, `./github-workflow-examples.md`
+- Examples: `./reference/converting-sub-agents.md`, `./reference/aws-deployment-patterns.md`
 - NOT: `./reference.md`, `./helpers.md`, `./utils.md`
-- Reference files with relative paths like `./filename.md` in SKILL.md
+- Reference files from SKILL.md with paths like `./reference/filename.md`
 
 See `./reference/skill-structure-and-format.md` for detailed directory layout patterns, progressive disclosure examples, and multi-file organization guidance.
 
@@ -193,9 +196,9 @@ When refining existing skills, see `./reference/editing-skills-guide.md` for the
    - Test if description matches typical user queries
 
 2. **Improve Organization**: Use progressive disclosure
-   - Move detailed content to separate files with intention-revealing names
+   - Move detailed content to `reference/` subdirectory with intention-revealing names
    - Keep SKILL.md focused on core instructions (under 500 lines)
-   - Reference files with relative paths (e.g., `./processing-details.md`)
+   - Reference files with relative paths (e.g., `./reference/processing-details.md`)
 
 3. **Add Supporting Files**:
    - Templates for common patterns

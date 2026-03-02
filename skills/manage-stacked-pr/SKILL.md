@@ -207,7 +207,7 @@ git rebase --onto new-bottom-branch main old-branch-1
 git log --oneline new-bottom-branch..old-branch-1
 ```
 
-If unexpected commits appear, use the **cherry-pick escape hatch**: reset to parent tip and cherry-pick only desired commits from `origin/old-branch-1`. See `./stack-rebase-and-sync-workflow.md`.
+If unexpected commits appear, use the **cherry-pick escape hatch**: reset to parent tip and cherry-pick only desired commits from `origin/old-branch-1`. See `./reference/stack-rebase-and-sync-workflow.md`.
 
 ### Step 4: Cascade Rebase and Push
 
@@ -291,9 +291,9 @@ git log --oneline branch-1..branch-2
 git log --oneline branch-2..branch-3
 ```
 
-If unexpected commits appear, use the cherry-pick escape hatch (see `./stack-rebase-and-sync-workflow.md`).
+If unexpected commits appear, use the cherry-pick escape hatch (see `./reference/stack-rebase-and-sync-workflow.md`).
 
-For the full rebase procedure, `--onto` patterns, inserting branches, rebasing onto updated `main`, and the cherry-pick escape hatch, see `./stack-rebase-and-sync-workflow.md`. For conflict strategies, see `./conflict-resolution-guide.md`.
+For the full rebase procedure, `--onto` patterns, inserting branches, rebasing onto updated `main`, and the cherry-pick escape hatch, see `./reference/stack-rebase-and-sync-workflow.md`. For conflict strategies, see `./reference/conflict-resolution-guide.md`.
 
 ---
 
@@ -316,7 +316,7 @@ Force pushes invalidate commit hashes in "Resolved by [hash](link)" comment repl
 ~/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs <owner> <repo> <pr_number>
 ```
 
-The script outputs `instructions.tip` for handling multiple PRs. See `./managing-pr-comment-links-after-force-push.md` for manual fallback.
+The script outputs `instructions.tip` for handling multiple PRs. See `./reference/managing-pr-comment-links-after-force-push.md` for manual fallback.
 
 ---
 
@@ -324,7 +324,7 @@ The script outputs `instructions.tip` for handling multiple PRs. See `./managing
 
 Create GitHub PRs bottom-to-top, each targeting its parent branch. Include a **PR Stack** numbered list (not a table) at the bottom of each PR body — GitHub auto-renders `#123` references with title and status in list items.
 
-For the full procedure including PR template detection, stack list format, and `#TBD` placeholder workflow, see `./creating-stack-prs-workflow.md`.
+For the full procedure including PR template detection, stack list format, and `#TBD` placeholder workflow, see `./reference/creating-stack-prs-workflow.md`.
 
 ---
 
@@ -347,7 +347,7 @@ gh pr list --json number,headRefName -q '.[] | "\(.headRefName) \(.number)"'
 
 The fetch script outputs `instructions.workflow` with the complete bottom-up processing steps. Follow those instructions to address, rebase, push, and resolve threads.
 
-For the complete bottom-up review cycle with cross-branch comments and batching, see `./stack-pr-review-workflow.md`.
+For the complete bottom-up review cycle with cross-branch comments and batching, see `./reference/stack-pr-review-workflow.md`.
 
 ---
 
@@ -404,7 +404,7 @@ Before fixing, categorize each failure:
 - **Do NOT fix on impl branch**: Behavioral rewrites — changed assertions, new test cases, rewritten logic
 - **Collapse the stack**: When fixes are too extensive and the tests PR is approved — `gh pr merge <tests-pr> --squash`
 
-For the full categorization guide, decision tree, fix procedures, and collapse workflow, see `./test-split-stack-workflow.md`.
+For the full categorization guide, decision tree, fix procedures, and collapse workflow, see `./reference/test-split-stack-workflow.md`.
 
 ---
 
@@ -422,7 +422,7 @@ Merge all PRs in a stack sequentially from bottom to top using squash merges.
 5. Cascade rebase remaining branches above, force push
 6. Wait for CI, then merge next
 
-For the full step-by-step procedure, complete 4-PR example, and recovery from accidental `--delete-branch`, see `./squash-merging-stack-workflow.md`.
+For the full step-by-step procedure, complete 4-PR example, and recovery from accidental `--delete-branch`, see `./reference/squash-merging-stack-workflow.md`.
 
 ---
 
@@ -456,7 +456,7 @@ All scripts are in `~/.claude/skills/manage-stacked-pr/scripts/` and are directl
 - Re-run with explicit stack ID: `detect-stack.mjs --stack-id auth-system`
 
 ### Rebase Conflicts
-See `./conflict-resolution-guide.md` for detailed strategies.
+See `./reference/conflict-resolution-guide.md` for detailed strategies.
 
 ### Force Push Rejected
 Another contributor pushed changes. Run `git fetch origin` then `git log origin/<branch>..<branch>` to inspect, merge their changes, and retry.
@@ -474,11 +474,11 @@ If `--delete-branch` was used during a squash merge, child PRs are auto-closed a
 
 ## Supporting Files
 
-- `./squash-merging-stack-workflow.md` - Full merge procedure, 4-PR example, and auto-closed PR recovery
-- `./creating-stack-prs-workflow.md` - PR creation procedure, stack list format, and template detection
-- `./stack-rebase-and-sync-workflow.md` - Detailed rebase procedures, `@{1}` technique, `--onto` patterns, inserting branches, cherry-pick escape hatch
-- `./stack-pr-review-workflow.md` - Full PR review cycle across stacked branches
-- `./conflict-resolution-guide.md` - Rebase conflict resolution strategies and recovery
-- `./managing-pr-comment-links-after-force-push.md` - Updating commit links in PR comments after force pushes
-- `./test-split-stack-workflow.md` - Managing stacks where tests are split from implementation for reviewability
+- `./reference/squash-merging-stack-workflow.md` - Full merge procedure, 4-PR example, and auto-closed PR recovery
+- `./reference/creating-stack-prs-workflow.md` - PR creation procedure, stack list format, and template detection
+- `./reference/stack-rebase-and-sync-workflow.md` - Detailed rebase procedures, `@{1}` technique, `--onto` patterns, inserting branches, cherry-pick escape hatch
+- `./reference/stack-pr-review-workflow.md` - Full PR review cycle across stacked branches
+- `./reference/conflict-resolution-guide.md` - Rebase conflict resolution strategies and recovery
+- `./reference/managing-pr-comment-links-after-force-push.md` - Updating commit links in PR comments after force pushes
+- `./reference/test-split-stack-workflow.md` - Managing stacks where tests are split from implementation for reviewability
 - `./scripts/` - Executable Node.js scripts for stack operations

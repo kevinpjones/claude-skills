@@ -34,7 +34,7 @@ skill-name/
 - `./misc.md`
 
 **Reference files with relative paths:**
-- Use `./filename.md` in SKILL.md
+- Reference markdown docs always go in `reference/` — use `./reference/filename.md` paths in SKILL.md
 - Use lowercase filenames with hyphens
 - Group related files in subdirectories (reference/, scripts/, templates/)
 
