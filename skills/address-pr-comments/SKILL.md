@@ -65,19 +65,19 @@ Otherwise, check out the PR branch:
 gh pr checkout <PR_NUMBER_OR_URL>
 ```
 
-After checkout (or if already on the branch), capture the PR number for later use:
+## Step 2: Get PR Context
+
+Run the context script to get PR number, owner, repo, branch, and stack info in one call:
 
 ```bash
-PR_NUMBER=$(gh pr view --json number -q '.number')
+~/.claude/skills/address-pr-comments/scripts/get-pr-context.mjs [PR_NUMBER_OR_URL]
 ```
 
-## Step 2: Determine Repository Owner and Name
+If no argument is provided, it detects the PR from the current branch. The output includes:
+- `pr_number`, `owner`, `repo`, `branch`, `base_branch`, `url`
+- `stack` — `null` if not stacked, or `{ stack_id, parent_branch, position }` if part of a stack
 
-```bash
-PAGER= gh repo view --json owner,name -q '.owner.login + "/" + .name'
-```
-
-Store these values for use in subsequent API calls.
+Store these values for use in subsequent steps.
 
 ## Step 3: Fetch Unresolved Review Comments
 
@@ -178,12 +178,10 @@ Use only the subject line - no commit body.
 ### 4f. Get Commit Hashes
 
 ```bash
-# Full hash for the link
-FULL_HASH=$(git log -1 --format=%H)
-
-# Short hash for display
-SHORT_HASH=$(git log -1 --format=%h)
+~/.claude/skills/address-pr-comments/scripts/get-reply-commit-hash.mjs
 ```
+
+Defaults to HEAD. Pass an optional commit ref to target a different commit. The output includes `short_hash`, `full_hash`, `subject`, and `respond_args` (pre-formatted for `respond-to-thread.mjs --commit`).
 
 ### 4g. Ask Approval to Reply and/or Resolve
 
@@ -212,7 +210,26 @@ Run the respond script with the appropriate flags based on user's choice:
 
 Repeat from step 4a for each remaining unresolved comment.
 
-## Step 5: Summary
+## Step 5: Push Changes
+
+After all comments are addressed, push the branch. The push script is stack-aware:
+
+```bash
+~/.claude/skills/address-pr-comments/scripts/push-branch.mjs
+```
+
+For non-stacked branches, this does a simple `--force-with-lease` push.
+
+For stacked branches, it automatically:
+1. Rebases child branches using the `@{1}` refspec technique
+2. Force-pushes all affected branches in one command
+3. Updates "Resolved by" comment links on each affected PR
+
+Options:
+- `--dry-run` — show what would be done without making changes
+- `--no-links` — skip updating PR comment links after push
+
+## Step 6: Summary
 
 After processing all comments, provide a summary:
 - Number of comments addressed
@@ -228,8 +245,13 @@ After processing all comments, provide a summary:
 
 # Scripts
 
-All GraphQL operations are handled by executable scripts in `./scripts/` (run directly, no `node` prefix needed):
+All scripts are in `./scripts/` and are directly executable (no `node` prefix needed):
 
-- `check-prerequisites.mjs` - Verify gh CLI installation and authentication
-- `fetch-unresolved-threads.mjs` - Fetch unresolved PR review threads
-- `respond-to-thread.mjs` - Reply to and/or resolve a thread (supports `--commit`, `--reply`, `--resolve` flags)
+| Script | Purpose |
+|--------|---------|
+| `get-pr-context.mjs` | Get PR number, owner, repo, branch, and stack info in one call |
+| `get-reply-commit-hash.mjs` | Get commit hash info formatted for `respond-to-thread.mjs --commit` |
+| `push-branch.mjs` | Stack-aware push with child rebase and comment link updates |
+| `fetch-unresolved-threads.mjs` | Fetch unresolved PR review threads via GraphQL |
+| `respond-to-thread.mjs` | Reply to and/or resolve a thread (`--commit`, `--reply`, `--resolve`) |
+| `check-prerequisites.mjs` | Verify gh CLI installation and authentication |
