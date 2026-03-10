@@ -82,11 +82,15 @@ Launch all selected agents in a single message for true parallel execution.
 
 ## Step 4: Collect User Feedback
 
-While sub-agents are running (or after they complete), ask the user:
+**BLOCKING STEP — Do NOT proceed to Step 5 until the user has responded.**
 
-"Do you have any additional review observations or areas of concern to include?"
+After sub-agents complete, **use the AskUserQuestion tool** to ask the user:
 
-If the user provides feedback, normalize each item into the same structured format as agent findings with category "Review Note".
+"The sub-agent reviews are complete. Before I consolidate findings, do you have any additional review observations or areas of concern to include? (Reply 'none' to skip)"
+
+Wait for the user's response. Do not move on to consolidation or any subsequent step until the user has explicitly replied. This ensures the user has a chance to review the diff themselves and contribute their own observations before the comment list is finalized.
+
+If the user provides feedback, normalize each item into the same structured format as agent findings with category "Review Note". User feedback items may be file-specific or general (non-file-specific).
 
 ## Step 5: Fetch Existing Threads for Dedup
 
