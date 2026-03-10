@@ -106,15 +106,10 @@ async function addReviewThread(prId, body, path, line, side, startLine, reviewId
   if (startLine && startLine !== line) {
     args.push('-F', `startLine=${startLine}`);
     args.push('-f', `startSide=${side}`);
-  } else {
-    args.push('-f', 'startLine=');
-    args.push('-f', 'startSide=');
   }
 
   if (reviewId) {
     args.push('-f', `pullRequestReviewId=${reviewId}`);
-  } else {
-    args.push('-f', 'pullRequestReviewId=');
   }
 
   const stdout = await runGh(args);

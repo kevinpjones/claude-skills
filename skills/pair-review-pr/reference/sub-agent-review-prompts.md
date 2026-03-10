@@ -13,7 +13,9 @@ Analyze the following diff and source files, then report your findings in the st
 
 ## Output Format (required for all agents)
 
-Each finding MUST be reported as a JSON object in a fenced code block:
+Each finding MUST be reported as a JSON object in a fenced code block.
+
+**File-specific finding** (attaches to a diff line):
 
 ````
 ```json
@@ -30,6 +32,23 @@ Each finding MUST be reported as a JSON object in a fenced code block:
 ```
 ````
 
+**General finding** (not tied to a specific diff line — e.g., cross-cutting concerns, architectural observations, overall patterns):
+
+````
+```json
+{
+  "file": null,
+  "line": null,
+  "severity": "high|medium|low",
+  "category": "agent-specific category",
+  "description": "Clear description of the concern",
+  "suggestion": "Recommended action or approach"
+}
+```
+````
+
+General findings are collected and included in the review summary body rather than posted as inline diff comments. Use these for observations that span multiple files or don't map to a single location.
+
 Wrap all findings in a summary section at the end:
 
 ```
@@ -37,6 +56,7 @@ Wrap all findings in a summary section at the end:
 - **High**: N findings
 - **Medium**: N findings
 - **Low**: N findings
+- **General**: N findings (non-file-specific)
 ```
 
 ## Agent: code-simplifier (default)

@@ -1,31 +1,39 @@
 # Comment Formatting Guide
 
-## Comment Structure
+## Writing Style
 
-Each PR review comment should follow this format:
+Write review comments in **plain, conversational language**. No structured headers, severity badges, or category labels. Just describe the issue clearly — what's wrong and why it matters.
 
-```markdown
-**[Category]** · Severity: `high|medium|low`
-
-<Description of the issue — 1-2 sentences explaining what's wrong and why it matters.>
-
-<Optional: reference to existing pattern in codebase via GitHub permalink>
-
-```suggestion
-// GitHub inline suggestion block — only for concrete single-hunk fixes
-// This renders as a clickable "Apply suggestion" button in GitHub
+**Do NOT use formats like:**
+```
+**Correctness** · Severity: `high`
+```
+```
+Review Note * Severity: medium
 ```
 
-<Optional: Additional context, explanation, or alternative approaches>
+**Do use plain language:**
+```
+This parseInt call doesn't specify a radix, which can produce unexpected results for strings with leading zeros.
 ```
 
-## Severity Levels
+## Severity Callouts
+
+For **high or critical** severity issues only, prefix with an emoji callout to draw attention:
+
+```
+🚨 URGENT — This parseInt call doesn't specify a radix...
+```
+
+Medium and low severity findings should NOT have any prefix or callout — just state the issue directly.
+
+## Severity Definitions
 
 | Level | Meaning | Action Expected |
 |-------|---------|----------------|
-| `high` | Bug, security issue, or incorrect behavior | Must fix before merge |
-| `medium` | Maintainability, readability, or design concern | Should address in this PR |
-| `low` | Style nit, minor optimization, or suggestion | Nice to have, can defer |
+| high | Bug, security issue, or incorrect behavior | Must fix before merge |
+| medium | Maintainability, readability, or design concern | Should address in this PR |
+| low | Style nit, minor optimization, or suggestion | Nice to have, can defer |
 
 ## GitHub Suggestion Blocks
 
@@ -54,27 +62,12 @@ See the existing pattern at [`src/utils/helpers.ts#L15-L24`](https://github.com/
 
 **IMPORTANT**: Permalinks must use commit hashes reachable via github.com. Use the `generate-permalink.mjs` script to create valid links. Never use branch names in permalinks (they shift as new commits land).
 
-## Comment Categories
-
-Map agent findings to these display categories:
-
-| Agent Source | Category Label |
-|-------------|----------------|
-| code-simplifier | Simplification |
-| code-reviewer | Correctness |
-| typescript-enforcer | Type Safety |
-| efficiency-reviewer | Performance |
-| User feedback | Review Note |
-| Multiple agents | Combined Review |
-
 ## Example Comments
 
-### High Severity — Bug
+### High Severity — Bug (with emoji callout)
 
 ```markdown
-**Correctness** · Severity: `high`
-
-This `parseInt` call doesn't specify a radix, which can produce unexpected results for strings with leading zeros (e.g., `"08"` in older engines).
+🚨 URGENT — This `parseInt` call doesn't specify a radix, which can produce unexpected results for strings with leading zeros (e.g., `"08"` in older engines).
 
 ```suggestion
 const count = parseInt(input, 10);
@@ -84,8 +77,6 @@ const count = parseInt(input, 10);
 ### Medium Severity — With Permalink
 
 ```markdown
-**Simplification** · Severity: `medium`
-
 This date formatting logic duplicates the existing `formatISODate` utility. See [`src/utils/date-helpers.ts#L12-L18`](https://github.com/owner/repo/blob/abc1234/src/utils/date-helpers.ts#L12-L18).
 
 ```suggestion
@@ -96,8 +87,6 @@ const formatted = formatISODate(createdAt);
 ### Low Severity — Suggestion
 
 ```markdown
-**Type Safety** · Severity: `low`
-
 Consider using a discriminated union instead of separate boolean flags. This would let TypeScript narrow the type automatically in switch/if statements.
 
 ```typescript
@@ -110,3 +99,11 @@ type Config =
   | { mode: 'async'; retryPolicy: RetryPolicy; ... }
 ```
 ```
+
+### General Comment (non-file-specific, for review summary)
+
+```markdown
+The overall approach of decomposing the monolithic handler into separate pipeline stages looks solid. One concern: the error recovery strategy differs between stages — stage 1 retries silently while stage 3 throws immediately. Consider standardizing the error handling pattern across all stages.
+```
+
+General comments don't attach to specific diff lines. They are collected during the review and included in the review summary body (see Step 9 in SKILL.md).

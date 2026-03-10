@@ -103,9 +103,10 @@ Fetch ALL existing review threads (resolved AND unresolved):
 Aggregate all findings from sub-agents and user feedback into a single prioritized list:
 
 1. **Parse** each agent's output, extracting the structured JSON findings
-2. **Deduplicate across agents** — if multiple agents flag the same line/issue, merge into one finding attributed to all sources
-3. **Prioritize**: High > Medium > Low severity
-4. **Detect duplicates against existing threads** — Read the existing threads JSON from Step 5 and compare each proposed finding against ALL threads (resolved and unresolved). For each finding, determine:
+2. **Separate general from file-specific** — findings with `"file": null` are general comments; set them aside for the review summary (Step 9)
+3. **Deduplicate across agents** — if multiple agents flag the same line/issue, merge into one finding attributed to all sources
+4. **Prioritize**: High > Medium > Low severity
+5. **Detect duplicates against existing threads** — Read the existing threads JSON from Step 5 and compare each proposed finding against ALL threads (resolved and unresolved). For each finding, determine:
    - Does an existing thread cover the same file and overlapping line range?
    - Does the existing thread's content address the same concern (wholly or partially)?
    - Is the existing thread resolved or still open?
@@ -137,12 +138,15 @@ Store the `review_id` for attaching comments.
 
 ## Step 8: Present and Publish Comments
 
-For EACH finding (in priority order), follow this approval loop:
+**Only process file-specific findings here.** General findings (with `file: null`) are handled in Step 9.
+
+For EACH file-specific finding (in priority order), follow this approval loop:
 
 ### 8a. Format the Comment
 
 Format using the patterns in `./reference/comment-formatting.md`:
-- Include category label and severity badge
+- Write in plain language — NO structured headers, severity badges, or category labels
+- For high/critical severity only, prefix with `🚨 URGENT —` or similar emoji callout
 - Add code snippets using markdown fenced blocks
 - Use GitHub `suggestion` blocks for concrete single-hunk fixes
 - Generate permalinks for cross-references to existing codebase code:
@@ -155,12 +159,29 @@ Format using the patterns in `./reference/comment-formatting.md`:
 
 ### 8b. Present for Approval
 
-Display the fully formatted comment to the user with these options:
+**Use the AskUserQuestion tool** to present each comment for approval. The presentation MUST include:
+
+1. **Comment source** — clearly indicate which sub-agent produced the finding (e.g., "Source: code-reviewer") or "Source: user-generated" for user feedback from Step 4
+2. **File and line** — where the comment will be posted
+3. **The fully formatted comment body** — as it will appear on GitHub
+
+Format: `"Comment N of M — [file:line] — Source: [agent-name|user-generated] — Approve / Edit / Skip?"`
+
+Options:
 - **Approve**: Post as-is
 - **Edit**: User provides revised text, re-present for approval
 - **Skip**: Do not post this comment
 
-Show: `"Comment N of M — [file:line] (severity) — Approve / Edit / Skip?"`
+**For user-generated comments (from Step 4):** These require special handling:
+- Revise the user's original notes for clarity and professional tone
+- Augment with code snippets, GitHub suggestion blocks, and/or permalinks as appropriate
+- Show **both** the original user note and the revised comment side-by-side so the user can see what changed:
+  ```
+  Original: "the error handling here looks wrong"
+  Revised:  "This catch block swallows the error silently — the caller has no way to
+             know the operation failed. Consider re-throwing or returning a Result type."
+  ```
+- The user approves or edits the **revised** version
 
 **For findings flagged as duplicates:** Still present the comment, but clearly note the duplication:
 - Show the existing thread's content (preview of first comment)
@@ -181,31 +202,85 @@ cat > /tmp/pr-comment-body.md << 'ENDCOMMENT'
 <formatted comment body>
 ENDCOMMENT
 
+# For multi-line comments (start_line differs from line):
 ./scripts/add-review-comment.mjs <OWNER> <REPO> <PR_NUMBER> \
   --path <file> \
   --line <line> \
   --start-line <start_line> \
   --body-file /tmp/pr-comment-body.md \
   --review-id <REVIEW_ID>
+
+# For single-line comments (omit --start-line entirely):
+./scripts/add-review-comment.mjs <OWNER> <REPO> <PR_NUMBER> \
+  --path <file> \
+  --line <line> \
+  --body-file /tmp/pr-comment-body.md \
+  --review-id <REVIEW_ID>
 ```
+
+**IMPORTANT**: For single-line comments, do NOT pass `--start-line`. The GitHub GraphQL API rejects empty `startLine`/`startSide` values. Only include `--start-line` when the comment spans multiple lines and `start_line` differs from `line`.
 
 ### 8d. Continue
 
 Repeat 8a-8c for each remaining finding.
 
-## Step 9: Summary
+## Step 9: Compose Review Summary
 
-After all comments are processed, provide a summary:
+After all inline comments are processed, compose a suggested **review summary body** for the user. This is the text that appears as the top-level review comment when submitting the review on GitHub.
+
+### 9a. Gather General Comments
+
+Collect all general (non-file-specific) findings from Step 6 that were set aside. Also include any observations from user feedback in Step 4 that don't map to specific diff lines.
+
+### 9b. Draft the Summary
+
+Write a concise review summary in plain language that includes:
+
+1. **Overall assessment** — one or two sentences on the PR's approach and quality
+2. **General comments** — any cross-cutting concerns, architectural observations, or patterns noticed across the PR that don't belong on a specific diff line
+3. **Key inline highlights** — brief mention of the most important inline comments posted (high severity), so the author knows what to prioritize
+
+Format as plain markdown. No structured headers like "Severity: high". Keep the tone constructive and direct.
+
+Example:
+
+```markdown
+The decomposition of the monolithic handler into pipeline stages is a solid approach. A few concerns to address:
+
+- The error recovery strategy differs between stages — stage 1 retries silently while stage 3 throws immediately. Consider standardizing error handling across all stages.
+- Several of the new utility functions duplicate existing helpers in `src/utils/` (see inline comments).
+
+The most important inline comments are the missing null check in `processOrder.ts:42` and the unhandled promise rejection in `pipeline.ts:78`.
+```
+
+### 9c. Present for Approval
+
+**Use the AskUserQuestion tool** to present the draft summary. They can:
+- **Approve**: Use as the review body
+- **Edit**: Revise and re-present
+- **Skip**: No summary body (user will write their own on GitHub)
+
+### 9d. Copy to Clipboard
+
+If approved, copy the summary to the user's clipboard (using `pbcopy` on macOS or equivalent) so they can paste it as the review body on GitHub. Also write it to `/tmp/pr-review-summary.md` as a backup.
+
+**IMPORTANT**: The GitHub API does not support setting the body on a pending review after creation. The user must paste this summary when submitting the review on GitHub.
+
+## Step 10: Final Summary
+
+After all comments and the review summary are processed, provide a final summary:
 
 ```
-## Review Summary
-- **Posted**: N comments (H high, M medium, L low)
+## Review Complete
+- **Posted**: N inline comments (H high, M medium, L low)
 - **Skipped**: N comments
 - **Duplicates avoided**: N (already covered by existing threads)
+- **General comments**: N (included in review summary)
+- **Review summary**: Copied to clipboard / Skipped
 - **Review status**: PENDING — visit the PR to finalize and submit your review
 ```
 
-Remind the user: "Your review is pending. Visit the PR on GitHub to add an overall summary and submit it."
+Remind the user: "Your review is pending. Visit the PR on GitHub to paste the review summary and submit."
 
 **Do NOT submit the review.** The user controls when and how to finalize it.
 
