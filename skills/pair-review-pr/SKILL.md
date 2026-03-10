@@ -264,15 +264,68 @@ The most important inline comments are the missing null check in `processOrder.t
 - **Edit**: Revise and re-present
 - **Skip**: No summary body (user will write their own on GitHub)
 
-### 9d. Copy to Clipboard
+### 9d. Save the Summary
 
-If approved, copy the summary to the user's clipboard (using `pbcopy` on macOS or equivalent) so they can paste it as the review body on GitHub. Also write it to `/tmp/pr-review-summary.md` as a backup.
+If approved, write the summary to `/tmp/pr-review-summary-<OWNER>-<REPO>-<PR_NUMBER>.md` for use in Step 10.
 
-**IMPORTANT**: The GitHub API does not support setting the body on a pending review after creation. The user must paste this summary when submitting the review on GitHub.
+## Step 10: Submit or Copy Review
 
-## Step 10: Final Summary
+After the review summary is finalized, present the user with submission options.
 
-After all comments and the review summary are processed, provide a final summary:
+### 10a. Recommend a Review Type
+
+Based on the findings, recommend a review type:
+
+- **APPROVE** — if no high-severity findings were posted, or all high-severity items were skipped
+- **COMMENT** — if findings are informational or mixed severity with nothing blocking
+- **REQUEST_CHANGES** — if high-severity findings were posted that must be addressed before merge
+
+Present the recommendation with rationale, e.g.:
+> "You posted 2 high-severity comments flagged as must-fix. I recommend **Request Changes**."
+
+### 10b. Ask the User
+
+**Use the AskUserQuestion tool** to ask the user how to proceed:
+
+```
+How would you like to finalize this review?
+
+1. Submit as APPROVE
+2. Submit as COMMENT (feedback only)
+3. Submit as REQUEST_CHANGES
+4. Copy summary to clipboard (I'll submit manually on GitHub)
+5. Skip (leave review pending)
+```
+
+Include your recommendation (e.g., "Recommended: option 3 — Request Changes").
+
+### 10c. Execute the User's Choice
+
+**If the user chose to submit (options 1-3):**
+
+```bash
+./scripts/submit-review.mjs <OWNER> <REPO> <PR_NUMBER> \
+  --event <APPROVE|COMMENT|REQUEST_CHANGES> \
+  --body-file /tmp/pr-review-summary-<OWNER>-<REPO>-<PR_NUMBER>.md
+```
+
+Report the result including the review URL from the script output.
+
+**If the user chose to copy to clipboard (option 4):**
+
+```bash
+cat /tmp/pr-review-summary-<OWNER>-<REPO>-<PR_NUMBER>.md | pbcopy
+```
+
+Confirm: "Review summary copied to clipboard. Your review is still pending — visit the PR on GitHub to paste the summary and submit."
+
+**If the user chose to skip (option 5):**
+
+Confirm: "Review left as pending. Visit the PR on GitHub to finalize when ready."
+
+## Step 11: Final Summary
+
+After submission (or skip), provide a final summary:
 
 ```
 ## Review Complete
@@ -280,13 +333,9 @@ After all comments and the review summary are processed, provide a final summary
 - **Skipped**: N comments
 - **Duplicates avoided**: N (already covered by existing threads)
 - **General comments**: N (included in review summary)
-- **Review summary**: Copied to clipboard / Skipped
-- **Review status**: PENDING — visit the PR to finalize and submit your review
+- **Review**: Submitted as APPROVE/COMMENT/REQUEST_CHANGES / Copied to clipboard / Left pending
+- **URL**: <review URL if submitted>
 ```
-
-Remind the user: "Your review is pending. Visit the PR on GitHub to paste the review summary and submit."
-
-**Do NOT submit the review.** The user controls when and how to finalize it.
 
 # Error Handling
 
@@ -311,6 +360,7 @@ All scripts are in `./scripts/`, are self-executable (no `node` prefix needed), 
 | `fetch-all-review-threads.mjs` | Fetch ALL threads (resolved + unresolved) for dedup |
 | `add-review-comment.mjs` | Post comment to PR review via GraphQL |
 | `manage-pending-review.mjs` | Find or create pending review for current user |
+| `submit-review.mjs` | Submit pending review (APPROVE/COMMENT/REQUEST_CHANGES) via GraphQL |
 | `generate-permalink.mjs` | Generate GitHub permalinks with verified commit hashes |
 
 `check-prerequisites.mjs` and `get-pr-context.mjs` are symlinked from the `address-pr-comments` skill.
