@@ -1,5 +1,9 @@
 # Comment Formatting Guide
 
+## Line Width
+
+**Wrap all comment text at 120 characters.** This applies to the comment body presented to the user in the terminal for approval AND the final text posted to GitHub. Code blocks and URLs are exempt — don't break those mid-line.
+
 ## Writing Style
 
 Write review comments in **plain, conversational language**. No structured headers, severity badges, or category labels. Just describe the issue clearly — what's wrong and why it matters.
