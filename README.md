@@ -54,6 +54,12 @@ Manages stacked PR workflows using native git and GitHub CLI. Tracks stack relat
 
 **Invoke with:** `/manage-stacked-pr`
 
+### pair-review-pr
+
+Collaborative pair-review style PR code review that coordinates multiple AI sub-agent reviewers in parallel (code-simplifier, code-reviewer, typescript-enforcer, efficiency-reviewer), collects user feedback, detects duplicate comments against existing threads (resolved and unresolved), and publishes approved comments to a GitHub PR review. Each comment requires user approval before posting; the review itself is left pending for the user to finalize.
+
+**Invoke with:** `/pair-review-pr [PR number or URL]`
+
 ### update-pr-description
 
 Generates high-level PR descriptions in Problem/Solution format by analyzing the diff, commit history, and project context from Memory Bank. Preserves existing PR template sections and prompts before overwriting content.
@@ -80,5 +86,6 @@ Several skills reference each other:
 - **manage-stacked-pr** uses `address-pr-comments` for resolving review threads across a stack and `update-pr-description` for writing PR bodies.
 - **address-pr-comments** operates standalone but integrates naturally into the stacked PR review workflow.
 - **update-pr-description** reads from Memory Bank projects (via [memory-bank-mcp](https://github.com/kevinpjones/memory-bank-mcp/)) for project context when generating PR descriptions.
+- **pair-review-pr** orchestrates parallel sub-agent code reviews, collects user feedback, and publishes approved comments to GitHub PR reviews. Symlinks shared scripts from `address-pr-comments`.
 - **initialize-memory-bank-project** creates the Memory Bank project structure that `update-pr-description` and `resume-memory-bank-project` read from.
 - **resume-memory-bank-project** loads and validates the project context created by `initialize-memory-bank-project`, producing a summary for the main conversation.
