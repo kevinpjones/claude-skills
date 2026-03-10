@@ -44,11 +44,11 @@ Get the changed files overview and full diff:
 # File stats
 ./scripts/fetch-pr-diff.mjs --stat
 
-# Full diff to temp file (excludes lock files, toml by default)
-./scripts/fetch-pr-diff.mjs --output /tmp/pr-review-diff.txt
+# Full diff to temp file (auto-generates unique filename, excludes lock files/toml by default)
+./scripts/fetch-pr-diff.mjs
 ```
 
-Read the diff file and key changed source files to build full context. Read source files directly (not just diff hunks) to understand surrounding code.
+The script prints the temp file path to stdout (e.g., `Diff written to /tmp/pr-review-diff-a1b2c3d4.txt (12345 bytes)`). Parse this path and read the diff file. Also read key changed source files directly (not just diff hunks) to understand surrounding code.
 
 ## Step 2: Select Reviewers
 

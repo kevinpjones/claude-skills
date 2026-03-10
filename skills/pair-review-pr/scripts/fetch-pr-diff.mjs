@@ -9,18 +9,21 @@
  *   --stat               Show only file stats (names and line counts)
  *   --exclude <patterns> Comma-separated glob patterns to exclude
  *   --pr <number>        PR number (auto-detects base branch)
- *   --output <file>      Write diff to file instead of stdout
+ *   --output <file>      Write diff to file (default: random temp file). Refuses to overwrite existing files.
  *   --help               Show usage
  *
  * Default excludes: package-lock.json, *.toml, *.yaml, *.json, *.md
  *
- * Output (default): Full diff content
+ * Output (default): Diff written to a randomly named temp file; path printed to stdout
  * Output (--stat): JSON array of { file, additions, deletions }
  */
 
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
-import { writeFile } from 'fs/promises';
+import { writeFile, access } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { randomBytes } from 'crypto';
 
 const execAsync = promisify(exec);
 
@@ -124,11 +127,12 @@ Options:
   --stat               Show only file stats (names and line counts)
   --exclude <patterns> Comma-separated glob patterns to exclude
   --pr <number>        PR number (auto-detects base branch)
-  --output <file>      Write diff to file instead of stdout
+  --output <file>      Write diff to file (default: random temp file). Refuses to overwrite.
 
 Examples:
   fetch-pr-diff.mjs --stat
-  fetch-pr-diff.mjs --pr 42 --output /tmp/pr-diff.txt
+  fetch-pr-diff.mjs --pr 42
+  fetch-pr-diff.mjs --pr 42 --output /tmp/my-review-diff.txt
   fetch-pr-diff.mjs --base main --exclude "*.test.ts,*.spec.ts"`);
 }
 
@@ -143,12 +147,21 @@ async function main() {
       console.log(JSON.stringify(stats, null, 2));
     } else {
       const diff = await getDiff(base, opts.excludes);
+      const outputPath = opts.output || join(tmpdir(), `pr-review-diff-${randomBytes(4).toString('hex')}.txt`);
+
       if (opts.output) {
-        await writeFile(opts.output, diff);
-        console.log(`Diff written to ${opts.output} (${diff.length} bytes)`);
-      } else {
-        process.stdout.write(diff);
+        try {
+          await access(outputPath);
+          console.error(`Error: output file already exists: ${outputPath}`);
+          console.error('Use a different path or remove the existing file to avoid overwriting a concurrent session.');
+          process.exit(1);
+        } catch {
+          // File doesn't exist — safe to write
+        }
       }
+
+      await writeFile(outputPath, diff);
+      console.log(`Diff written to ${outputPath} (${diff.length} bytes)`);
     }
   } catch (error) {
     console.error('Error:', error.message);
