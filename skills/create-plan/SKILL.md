@@ -205,18 +205,29 @@ If the plan identified ADR candidates during the interview, ADRs must be authore
 
 **Why this ordering:** ADRs are permanent, individually-addressable records that outlive the plan. Merging an ADR is the act of adopting the decision — that acceptance should happen through its own review cycle, not buried inside a larger plan PR. Advancing ADRs ahead of the plan prevents implementation from starting before architectural alignment is reached.
 
-### Step 10: Present Summary & Get Approval
+### Step 10: Validate Plan
+
+Invoke the `validate-docs` skill against the plan directory to verify structural correctness:
+- All required sections are present in PLAN.md and PROGRESS.md
+- Phase documents (if any) have required sections
+- Cross-references resolve to existing files
+- File sizes respect progressive disclosure limits
+
+If validation returns errors, fix them before proceeding. Warnings should be reviewed and addressed where appropriate.
+
+### Step 11: Present Summary & Get Approval
 
 1. **Present a summary** of the generated plan to the user:
    - Plan directory location
    - Number of phases and brief description of each
    - Key decisions captured
+   - Validation results (confirm clean or note any accepted warnings)
    - Open questions remaining
    - Suggested first action
 
 2. **Ask for approval** before considering the skill complete
 
-3. If the user requests changes, update the relevant files and re-present
+3. If the user requests changes, update the relevant files, re-validate, and re-present
 
 ---
 

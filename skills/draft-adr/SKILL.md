@@ -99,9 +99,19 @@ See `./reference/adr-format-guide.md` for detailed guidance on writing each sect
 
 - **Superseded by** — Only include if this ADR replaces a prior decision. Reference the superseding ADR's filename. When adding this field, also update the superseded ADR to include a "Superseded by" reference back.
 
-## Step 6: Present the ADR
+## Step 6: Validate the ADR
 
-Display the generated ADR content to the user for review. If changes are requested, update the file and re-present.
+Invoke the `validate-docs` skill against the ADR file to verify structural correctness:
+- All required sections are present (Title, Context, Decision, Tradeoffs, Consequences)
+- Tradeoffs section has sufficient depth (at least two alternatives, chosen/rejected annotations)
+- Supersession references (if any) are well-formed and bidirectional
+- Filename follows the date-based naming convention
+
+If validation returns errors, fix them before proceeding. Warnings should be reviewed and addressed where appropriate.
+
+## Step 7: Present the ADR
+
+Display the generated ADR content and validation results to the user for review. If changes are requested, update the file, re-validate, and re-present.
 
 ---
 
