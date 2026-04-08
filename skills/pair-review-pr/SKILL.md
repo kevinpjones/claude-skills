@@ -38,17 +38,25 @@ Store `owner`, `repo`, `pr_number`, `branch`, `base_branch` for all subsequent s
 
 ## Step 1: Collect PR Diff
 
-Get the changed files overview and full diff:
+Get the changed files list, file stats, and full diff. The script uses `gh pr diff` to fetch the **authoritative** diff from GitHub — only files that GitHub considers part of the PR.
 
 ```bash
-# File stats
-./scripts/fetch-pr-diff.mjs --stat
+# Changed file paths (JSON array) — this defines the review scope
+./scripts/fetch-pr-diff.mjs --files --pr <PR_NUMBER>
 
-# Full diff to temp file (auto-generates unique filename, excludes lock files/toml by default)
-./scripts/fetch-pr-diff.mjs
+# File stats (additions/deletions per file)
+./scripts/fetch-pr-diff.mjs --stat --pr <PR_NUMBER>
+
+# Full diff to temp file (auto-generates unique filename, excludes lock files by default)
+# Also writes a companion -files.json with the changed file list
+./scripts/fetch-pr-diff.mjs --pr <PR_NUMBER>
 ```
 
-The script prints the temp file path to stdout (e.g., `Diff written to /tmp/pr-review-diff-a1b2c3d4.txt (12345 bytes)`). Parse this path and read the diff file. Also read key changed source files directly (not just diff hunks) to understand surrounding code.
+The script prints the temp file path to stdout (e.g., `Diff written to /tmp/pr-review-diff-a1b2c3d4.txt (12345 bytes)`). Parse this path and read the diff file.
+
+**Store the changed files list** — this is the authoritative PR scope used throughout the review. Only files in this list should receive inline review comments.
+
+Also read key changed source files directly (not just diff hunks) to understand surrounding code. You may read additional non-changed files for context, but these are NOT in scope for review findings.
 
 ## Step 2: Select Reviewers
 
@@ -66,14 +74,22 @@ Ask: "Which reviewers should I include? (code-simplifier is selected by default)
 ## Step 3: Launch Parallel Reviews
 
 Launch selected sub-agents concurrently using the Agent tool. Each agent receives:
+- The **explicit list of PR-changed files** (from Step 1) as the review scope
 - The full diff content
 - Key source file contents for context
 - The review prompt template from `./reference/sub-agent-review-prompts.md`
 
-**CRITICAL**: Every agent prompt MUST start with the READ-ONLY preamble:
+**CRITICAL**: Every agent prompt MUST start with the READ-ONLY preamble from `./reference/sub-agent-review-prompts.md`, which includes the scope constraint.
+
+**CRITICAL**: Every agent prompt MUST include the changed files list in this format:
 ```
-You are performing a READ-ONLY code review of a pull request. Do NOT modify any files.
-Do NOT use the Edit, Write, or NotebookEdit tools.
+## PR Changed Files (review scope)
+These are the ONLY files you may produce file-specific findings for:
+- path/to/file1.ts
+- path/to/file2.js
+...
+
+Any other files provided below are for context only — do NOT produce findings for them.
 ```
 
 Each agent MUST report findings in the structured JSON format defined in `./reference/sub-agent-review-prompts.md`.
@@ -107,10 +123,11 @@ Fetch ALL existing review threads (resolved AND unresolved):
 Aggregate all findings from sub-agents and user feedback into a single prioritized list:
 
 1. **Parse** each agent's output, extracting the structured JSON findings
-2. **Separate general from file-specific** — findings with `"file": null` are general comments; set them aside for the review summary (Step 9)
-3. **Deduplicate across agents** — if multiple agents flag the same line/issue, merge into one finding attributed to all sources
-4. **Prioritize**: High > Medium > Low severity
-5. **Detect duplicates against existing threads** — Read the existing threads JSON from Step 5 and compare each proposed finding against ALL threads (resolved and unresolved). For each finding, determine:
+2. **Filter out-of-scope findings** — discard any file-specific finding where the `file` path is NOT in the PR changed files list from Step 1. Log discarded findings count so the user knows they were filtered.
+3. **Separate general from file-specific** — findings with `"file": null` are general comments; set them aside for the review summary (Step 9)
+4. **Deduplicate across agents** — if multiple agents flag the same line/issue, merge into one finding attributed to all sources
+5. **Prioritize**: High > Medium > Low severity
+6. **Detect duplicates against existing threads** — Read the existing threads JSON from Step 5 and compare each proposed finding against ALL threads (resolved and unresolved). For each finding, determine:
    - Does an existing thread cover the same file and overlapping line range?
    - Does the existing thread's content address the same concern (wholly or partially)?
    - Is the existing thread resolved or still open?
@@ -356,7 +373,7 @@ All scripts are in `./scripts/`, are self-executable (no `node` prefix needed), 
 |--------|---------|
 | `check-prerequisites.mjs` | Verify gh CLI installation and authentication |
 | `get-pr-context.mjs` | Get PR number, owner, repo, branch, stack info |
-| `fetch-pr-diff.mjs` | Get PR diff and changed file stats |
+| `fetch-pr-diff.mjs` | Get PR diff, changed file list, and file stats via `gh pr diff` |
 | `fetch-all-review-threads.mjs` | Fetch ALL threads (resolved + unresolved) for dedup |
 | `add-review-comment.mjs` | Post comment to PR review via GraphQL |
 | `manage-pending-review.mjs` | Find or create pending review for current user |

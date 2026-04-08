@@ -9,6 +9,16 @@ You are performing a READ-ONLY code review of a pull request. Do NOT modify any 
 Do NOT use the Edit, Write, or NotebookEdit tools.
 
 Analyze the following diff and source files, then report your findings in the structured format below.
+
+**SCOPE CONSTRAINT — READ THIS CAREFULLY:**
+You will receive a list of files that are changed in this PR. You MUST ONLY produce
+findings for files in that list. You may also receive additional source files for
+context (to understand how the changed code interacts with the rest of the codebase),
+but you must NOT produce findings or recommendations for those context files.
+
+If you notice an issue in a context file that is directly caused by the PR changes,
+report it as a general finding (file: null) describing the cross-cutting concern,
+rather than as a file-specific finding on the context file.
 ```
 
 ## Output Format (required for all agents)
@@ -48,6 +58,8 @@ Each finding MUST be reported as a JSON object in a fenced code block.
 ````
 
 General findings are collected and included in the review summary body rather than posted as inline diff comments. Use these for observations that span multiple files or don't map to a single location.
+
+**IMPORTANT**: The `"file"` field in file-specific findings MUST be a file from the PR changed files list. Do NOT report findings on files that are not in the PR scope, even if you read them for context.
 
 Wrap all findings in a summary section at the end:
 
