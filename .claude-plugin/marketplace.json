@@ -11,7 +11,7 @@
     {
       "name": "kpj",
       "source": "./plugins/kpj",
-      "description": "A personal collection of skills and agents for PR workflows (address-pr-comments, pair-review-pr, update-pr-description, self-review), stacked PRs (manage-stacked-pr), Memory Bank projects (initialize/resume-memory-bank-project), execution plans (create-plan, resume-plan, validate-docs), ADRs (draft-adr), and skill authoring (build-skill). Skills invoke under the `kpj:` namespace.",
+      "description": "A personal collection of skills and agents for PR workflows (address-pr-comments, pair-review-pr, update-pr-description, self-review), stacked PRs (manage-stacked-pr), Memory Bank projects (initialize/resume-memory-bank-project), execution plans (create-plan, resume-plan, validate-docs), ADRs (draft-adr), design docs (draft-design-doc), and skill authoring (build-skill). Skills invoke under the `kpj:` namespace.",
       "category": "productivity",
       "keywords": [
         "pull-request",
@@ -20,6 +20,7 @@
         "code-review",
         "planning",
         "adr",
+        "design-doc",
         "skill-authoring"
       ]
     }

@@ -1,18 +1,18 @@
 ---
 name: validate-docs
-description: Use this skill when validating execution plans, ADRs, or other structured documentation in docs/. This includes checking that plans and ADRs contain required sections, enforcing size limits for progressive disclosure, verifying naming conventions, and auditing cross-references like ADR supersession links. Trigger keywords include "validate docs", "check plan", "check ADR", "lint docs", "validate plan", "validate ADR", "audit docs", "docs validation", "check documentation".
+description: Use this skill when validating execution plans, ADRs, design docs, or other structured documentation in docs/. This includes checking that plans, ADRs, and design docs contain required sections, enforcing size limits for progressive disclosure, verifying naming conventions, and auditing cross-references like ADR supersession links. Defers to draft-design-doc for design doc rules. Trigger keywords include "validate docs", "check plan", "check ADR", "check design doc", "lint docs", "validate plan", "validate ADR", "validate design doc", "audit docs", "docs validation", "check documentation".
 ---
 
 # Validating Structured Documentation
 
-Audit execution plans, ADRs, and other structured documentation in `docs/` for completeness, consistency, and adherence to progressive disclosure principles.
+Audit execution plans, ADRs, design docs, and other structured documentation in `docs/` for completeness, consistency, and adherence to progressive disclosure principles.
 
 This skill can validate:
 - A specific file or directory (e.g., `docs/plans/2026-03-30-stripe-migration/`)
-- A specific document type across the repo (e.g., all ADRs)
+- A specific document type across the repo (e.g., all ADRs, all design docs)
 - The entire `docs/` tree
 
-See `./reference/validation-rules.md` for the complete rule set with severity levels.
+See `./reference/validation-rules.md` for the complete rule set with severity levels for plans and ADRs. For design doc validation rules, this skill defers to the `draft-design-doc` skill's `reference/validation-rules.md` — the skill that owns a document type also owns its validation rules.
 
 ---
 
@@ -22,6 +22,7 @@ If `$ARGUMENTS` is provided, use it to determine scope:
 - A path to a specific file → validate that file
 - A path to a plan directory → validate the full plan
 - A path to `docs/adr/` → validate all ADRs
+- A path to `docs/design/` or a design subdirectory → validate the design doc(s) using the rule set owned by `draft-design-doc`
 - `all` or no argument → validate the entire `docs/` tree
 
 If no argument is given, ask the user what they'd like to validate.
@@ -40,6 +41,13 @@ ls docs/plans/*/phases/*.md 2>/dev/null
 **For ADRs:**
 ```bash
 ls docs/adr/*.md 2>/dev/null
+```
+
+**For design docs:**
+```bash
+ls -d docs/design/*/ 2>/dev/null
+ls docs/design/*/DESIGN.md 2>/dev/null
+ls docs/design/*/subdesigns/*.md 2>/dev/null
 ```
 
 If no documents are found in the requested scope, inform the user and exit.
@@ -115,10 +123,25 @@ For each ADR file under `docs/adr/`:
 - Supersession is bidirectional — if A says "Superseded by B", B's Context should reference A. One-directional supersession links are flagged (Error)
 - If "Supersedes:" is referenced in Context, the referenced file exists (Error)
 
-### 3c. Cross-Document Validation (when scope is `all`)
+### 3c. Design Doc Validation
+
+For each design directory under `docs/design/`, apply the rules defined in the `draft-design-doc` skill's `reference/validation-rules.md`. That skill owns the rules for design docs — this skill loads and applies them without duplicating the rule set.
+
+Load the rules from:
+```
+plugins/kpj/skills/draft-design-doc/reference/validation-rules.md
+```
+
+(or wherever `draft-design-doc` is installed in the runtime environment).
+
+The rules cover directory naming, required DESIGN.md sections (Context, Design Overview, Alternatives Considered, Dependencies & Risks, Acceptance Criteria), alternatives quality, subdesign integrity, references orphan detection, ADR Candidates formatting, and cross-reference resolution.
+
+### 3d. Cross-Document Validation (when scope is `all`)
 
 - Plan ADR Candidates reference ADR files that exist in `docs/adr/` (Warning — may be pending)
+- Design ADR Candidates reference ADR files that exist in `docs/adr/` (Warning — may be pending)
 - No orphaned files in `docs/plans/*/references/` that aren't linked from PLAN.md or a phase doc (Info)
+- No orphaned files in `docs/design/*/references/` that aren't linked from DESIGN.md or a subdesign (Info)
 
 ## Step 4: Present Results
 
@@ -156,7 +179,7 @@ Only fix issues the user approves. Do not auto-fix without confirmation.
 
 ### Missing `docs/` Directory
 - Inform the user that no structured documentation was found
-- Suggest using `create-plan` or `draft-adr` to get started
+- Suggest using `create-plan`, `draft-adr`, or `draft-design-doc` to get started
 
 ### Partial Structures
 - Validate what exists; don't fail on optional directories (`phases/`, `references/`)
@@ -174,4 +197,5 @@ Only fix issues the user approves. Do not auto-fix without confirmation.
 
 ## Supporting Files
 
-- See `./reference/validation-rules.md` for the complete rule set with severity levels and examples
+- See `./reference/validation-rules.md` for the plan and ADR rule sets with severity levels and examples
+- See the `draft-design-doc` skill's `reference/validation-rules.md` for the design doc rule set (owned and maintained by that skill)
