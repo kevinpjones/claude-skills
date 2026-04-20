@@ -1,1 +1,0 @@
-/Users/kevin/projects/claude-skills/skills/initialize-memory-bank-project/reference/memory-bank-tools-guide.md

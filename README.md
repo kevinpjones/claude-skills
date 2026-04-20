@@ -1,19 +1,25 @@
 # Claude Code Skills
 
-A collection of personal [Claude Code skills](https://docs.anthropic.com/en/docs/claude-code/skills) that extend Claude Code with reusable workflows for GitHub PR management, skill authoring, and project knowledge management.
+A personal [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces) that distributes a single `kpj` plugin containing reusable skills and agents for GitHub PR management, skill authoring, and project knowledge management.
 
 The Memory Bank skills are designed to work with [memory-bank-mcp](https://github.com/kevinpjones/memory-bank-mcp/).
 
 ## Installation
 
-Clone or symlink this repository into your Claude Code skills directory:
+Add the marketplace and install the `kpj` plugin:
 
-```bash
-# Clone directly into the skills directory
-git clone <repo-url> ~/.claude/skills
+```shell
+/plugin marketplace add kevinpjones/claude-skills
+/plugin install kpj@kpj-skills
+```
 
-# Or symlink individual skills
-ln -s /path/to/claude-skills/skills/address-pr-comments ~/.claude/skills/address-pr-comments
+Once installed, skills invoke under the `kpj:` namespace (for example, `kpj:address-pr-comments`). Agents are available to sub-agent-aware skills as `kpj:code-reviewer`, `kpj:code-simplifier`, etc.
+
+To test changes locally before publishing, add the marketplace from a local checkout:
+
+```shell
+/plugin marketplace add /path/to/claude-skills
+/plugin install kpj@kpj-skills
 ```
 
 ### Prerequisites
@@ -68,13 +74,21 @@ Generates high-level PR descriptions in Problem/Solution format by analyzing the
 
 ## Structure
 
-Each skill follows the standard Claude Code skill layout:
+The repository is laid out as a Claude Code plugin marketplace:
 
 ```
-skills/<skill-name>/
-  SKILL.md              # Required - instructions and frontmatter
-  scripts/              # Optional - Node.js helper scripts (ESM, .mjs)
-  *.md                  # Optional - supporting docs with intention-revealing names
+.claude-plugin/
+  marketplace.json                 # Marketplace catalog (lists the kpj plugin)
+plugins/
+  kpj/
+    .claude-plugin/
+      plugin.json                  # Plugin manifest
+    skills/<skill-name>/
+      SKILL.md                     # Required - instructions and frontmatter
+      scripts/                     # Optional - Node.js helper scripts (ESM, .mjs)
+      *.md                         # Optional - supporting docs
+    agents/
+      <agent-name>.md              # Sub-agents used by skills like pair-review-pr
 ```
 
 Scripts are executable Node.js modules that handle GitHub GraphQL queries, stack detection, commit validation, and other operations that benefit from structured output.

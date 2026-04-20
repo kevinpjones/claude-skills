@@ -1,0 +1,20 @@
+{
+  "name": "kpj",
+  "description": "A personal collection of Claude Code skills and agents for PR workflows, stacked PRs, memory bank projects, execution plans, ADRs, and skill authoring.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Kevin Jones"
+  },
+  "homepage": "https://github.com/kevinpjones/claude-skills",
+  "repository": "https://github.com/kevinpjones/claude-skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "agents",
+    "pull-request",
+    "memory-bank",
+    "stacked-pr",
+    "code-review",
+    "planning"
+  ]
+}

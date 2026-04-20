@@ -1,0 +1,1 @@
+../../initialize-memory-bank-project/reference/memory-bank-tools-guide.md

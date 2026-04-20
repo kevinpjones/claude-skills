@@ -1,0 +1,27 @@
+{
+  "name": "kpj-skills",
+  "owner": {
+    "name": "Kevin Jones"
+  },
+  "metadata": {
+    "description": "A personal Claude Code plugin marketplace.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "kpj",
+      "source": "./plugins/kpj",
+      "description": "A personal collection of skills and agents for PR workflows (address-pr-comments, pair-review-pr, update-pr-description, self-review), stacked PRs (manage-stacked-pr), Memory Bank projects (initialize/resume-memory-bank-project), execution plans (create-plan, resume-plan, validate-docs), ADRs (draft-adr), and skill authoring (build-skill). Skills invoke under the `kpj:` namespace.",
+      "category": "productivity",
+      "keywords": [
+        "pull-request",
+        "stacked-pr",
+        "memory-bank",
+        "code-review",
+        "planning",
+        "adr",
+        "skill-authoring"
+      ]
+    }
+  ]
+}
