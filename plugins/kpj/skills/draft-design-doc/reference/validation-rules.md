@@ -77,6 +77,15 @@ Applies only if the `## ADR Candidates` section exists in DESIGN.md.
 | D-050 | Warning | Each ADR candidate entry includes a one-line summary and a trigger | List item parsing — each entry has both a summary clause and a trigger clause |
 | D-051 | Info | ADR Candidates referenced by name can be found in `docs/adr/` | Grep `docs/adr/` for ADR names — candidates may be pending and missing |
 
+## Related ADRs
+
+Applies only if the `## Related ADRs` section exists in DESIGN.md.
+
+| ID | Severity | Rule | Detection |
+|----|----------|------|-----------|
+| D-052 | Error | Each Related ADRs link resolves to a file on disk | Extract relative links, check file existence |
+| D-053 | Warning | No entry appears in both ADR Candidates and Related ADRs | Compare decision summaries/link targets across both sections — a drafted ADR shouldn't still be listed as pending |
+
 ## Cross-References
 
 | ID | Severity | Rule | Detection |
@@ -109,6 +118,7 @@ Sections are detected by matching markdown heading patterns at the start of a li
 | `## Dependencies & Risks` | `## Dependencies`, `## Risks`, `## Dependencies and Risks` |
 | `## Acceptance Criteria` | `## Acceptance criteria`, `## Success Criteria` |
 | `## ADR Candidates` | `## ADR candidates`, `## Candidate ADRs` |
+| `## Related ADRs` | `## Related ADRs`, `## Related Decisions` |
 
 ---
 
@@ -119,3 +129,4 @@ The `validate-docs` skill should defer to this rule set when its scope includes 
 - When `validate-docs` discovers a directory under `docs/design/`, it loads these rules and applies them.
 - When `validate-docs` runs against the full `docs/` tree, design doc rules are applied alongside plan and ADR rules.
 - Severity levels and reporting format match the existing `validate-docs` conventions so results can be presented uniformly.
+- If a repo's actual, established design-doc convention conflicts with one of these rules (e.g., flat files instead of a directory structure, or a different section set), the real convention wins — flag the mismatch as informational rather than forcing the generic shape.

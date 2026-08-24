@@ -88,10 +88,21 @@ and link to its subdesign doc. Do not inline subdesign content.
 <!--
 ## ADR Candidates
 
-Uncomment this section if the design surfaced architectural decisions that warrant their own ADR.
-Each entry: one-line summary, then trigger criteria.
+Uncomment this section if the design surfaced architectural decisions that warrant their own ADR
+but haven't been drafted yet. Each entry: one-line summary, then trigger criteria.
 Draft each separately via the `draft-adr` skill — do not include the ADR body here.
+Once a candidate is drafted into a real ADR, move its entry to Related ADRs below instead of
+leaving it here.
 
 - **[Decision summary].** Trigger: [which criteria from when-to-write-design-doc.md were matched].
 - **[Decision summary].** Trigger: [criteria].
+-->
+
+<!--
+## Related ADRs
+
+Uncomment once at least one decision from this design has a real, drafted ADR.
+Link each with a one-line description — do not restate the ADR's content here.
+
+- [ADR: <decision title>](../../adr/YYYY-MM-DD-<name>.md) — one-line description.
 -->

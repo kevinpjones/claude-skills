@@ -1,10 +1,26 @@
 # [Title]
 
-<!-- Superseded by: YYYY-MM-DD-new-decision.md — uncomment only if this ADR has been replaced -->
+| | |
+|---|---|
+| **Supersedes** | [None, or relative links to the ADR(s) this one replaces] |
+| **Superseded by** | [None — filled in only after this ADR is superseded, as a post-merge edit] |
+| **Related** | [Relative links to related ADRs and/or design docs, or None] |
+
+## Corrections
+
+<!--
+Append-only log of post-merge factual corrections (typos, broken links, misstated numbers)
+that do not change the decision itself. No dates or author names — git history already
+tracks those. If a fix would change the decision, don't record it here: write a new ADR
+that supersedes this one instead.
+-->
+
+| Correction |
+|---|
 
 ## Context
 
-[The situation, problem, or constraint that prompted this decision. Include enough background that a reader unfamiliar with the initiative can understand why this decision was needed.]
+[The situation, problem, or constraint that prompted the decision. Include enough background that a reader unfamiliar with the initiative can understand why this decision was needed.]
 
 ## Decision
 

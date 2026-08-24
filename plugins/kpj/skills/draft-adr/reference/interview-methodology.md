@@ -43,6 +43,8 @@ Protocol for gathering decision context when the `draft-adr` skill is invoked st
 
 **Push back if needed:** An ADR without meaningful tradeoff analysis has limited value. If the user says "there were no alternatives," probe: "Was there a build-vs-buy choice? A phased vs. big-bang approach? A different technology that could solve the same problem?"
 
+**Don't push the user into manufacturing a second alternative that was never real.** If probing genuinely turns up nothing else — the decision was really the only viable path, or it's making an existing implicit convention explicit rather than choosing between options — accept that and document it honestly rather than settling for a strawman (an option nobody considered, or a design nobody would defend) just to fill out the section.
+
 ## Round 3: Consequences
 
 **Goal:** Document what changes as a result of this decision.

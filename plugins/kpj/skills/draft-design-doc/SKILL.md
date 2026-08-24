@@ -63,7 +63,19 @@ mkdir -p docs/design/YYYY-MM-DD-<short-name>
 
 If this is the first design, note that a `docs/design/README.md` index could be created eventually (outside this skill's scope).
 
-## Step 5: Gather Design Context
+## Step 5: Check for Existing Design Doc Convention
+
+Before assuming the generic directory + `DESIGN.md` structure applies as-is, look for prior designs:
+
+```bash
+ls -d docs/design/*/ 2>/dev/null
+```
+
+If prior designs exist, read one and follow its actual structure — file layout, naming, section set — over this skill's generic defaults where they conflict. A repo that's already settled on flat dated files instead of directories, or a different section set, has made its choice; don't reintroduce structure the team isn't using.
+
+If `docs/design/` is empty or doesn't exist yet, the generic structure in this skill is the right default — proceed normally.
+
+## Step 6: Gather Design Context
 
 ### Mode Detection
 
@@ -74,7 +86,7 @@ Check whether sufficient context has already been provided (e.g., from a `create
 - Key dependencies and risks
 - Acceptance criteria
 
-**If sufficient context exists:** Proceed directly to Step 6.
+**If sufficient context exists:** Proceed directly to Step 7.
 
 **If context is insufficient (standalone invocation):** Conduct the interview below.
 
@@ -113,7 +125,9 @@ Adapt questions based on previous answers. Skip rounds where context is already 
 
 As the user answers, flag decisions that warrant their own ADR (per the proposal, a design doc often spawns multiple ADRs). A decision is an ADR candidate when it meets any of the triggers in `./reference/interview-methodology.md#adr-candidate-detection`. Track candidates for inclusion in the DESIGN.md's ADR Candidates section.
 
-## Step 6: Decomposition Check
+Also ask whether any of these decisions already have a real ADR — from a prior pass at this same design, or drafted separately. Those go in **Related ADRs**, not ADR Candidates: a candidate is a decision still waiting to be written up; once the ADR exists, it's no longer a candidate.
+
+## Step 7: Decomposition Check
 
 Decide whether the design warrants a `subdesigns/` subdirectory:
 
@@ -128,7 +142,7 @@ Decide whether the design warrants a `subdesigns/` subdirectory:
 
 If subdesigns are warranted, identify the subsystems during the interview and plan one subdesign file per subsystem. The parent DESIGN.md summarizes each subsystem in 2-3 sentences and links to the subdesign.
 
-## Step 7: Write DESIGN.md
+## Step 8: Write DESIGN.md
 
 Write the design doc file to `docs/design/YYYY-MM-DD-<short-name>/DESIGN.md` using the format in `./templates/design-template.md`.
 
@@ -136,23 +150,24 @@ See `./reference/design-doc-format-guide.md` for detailed guidance on writing ea
 
 **Required sections:**
 
-- **Context** — The problem and constraints. What prompted this design work. Enough background that a reader unfamiliar with the initiative can understand why the design was needed.
+- **Context** — The problem and constraints. What prompted this design work. Enough background that a reader unfamiliar with the initiative can understand why the design was needed. Name the actual triggering event or state precisely rather than paraphrasing it loosely, and don't narrate the ticket/issue that prompted the work — that belongs in the PR/commit, not the design doc.
 - **Design Overview** — The high-level architecture: system diagrams (Mermaid encouraged), data flow, API contracts, schema changes. For complex designs with subdesigns, summarize the overall shape here and link to each subdesign doc rather than inlining detail.
-- **Alternatives Considered** — Other approaches and why they were rejected. This section exists so future engineers understand the decision landscape, not just the outcome. Use `### ` subheadings per alternative with `(chosen)` on the selected approach and `**Why rejected:**` on the others.
+- **Alternatives Considered** — Other approaches and why they were rejected. This section exists so future engineers understand the decision landscape, not just the outcome. Use `### ` subheadings per alternative with `(chosen)` on the selected approach and `**Why rejected:**` on the others. Only include alternatives that were genuinely considered — don't pad the list with a strawman just to satisfy the "at least two" validation rule.
 - **Dependencies & Risks** — External systems, migration concerns, rollback strategy.
 - **Acceptance Criteria** — How we know the design is correctly implemented.
 
-**Optional section:**
+**Optional sections:**
 
-- **ADR Candidates** — Architectural decisions identified during design that warrant their own Architecture Decision Record. Each entry includes a one-line summary and the trigger criteria it matched. Omit if no candidates were identified. These are flagged only — do not write the ADRs themselves. The user can invoke `draft-adr` separately for each candidate.
+- **ADR Candidates** — Architectural decisions identified during design that warrant their own Architecture Decision Record, but haven't been drafted yet. Each entry includes a one-line summary and the trigger criteria it matched. Omit if no candidates remain. These are flagged only — do not write the ADRs themselves. The user can invoke `draft-adr` separately for each candidate.
+- **Related ADRs** — Decisions from this design that already have a real, drafted ADR. Link to each by relative path with a one-line description. When a candidate in ADR Candidates gets drafted into an actual ADR, move its entry here rather than leaving it under both, or leaving it under ADR Candidates as if still pending.
 
-## Step 8: Write Subdesigns (If Warranted)
+## Step 9: Write Subdesigns (If Warranted)
 
-If Step 6 identified subsystems, write one file per subsystem under `subdesigns/` using `./templates/subdesign-template.md`. Each subdesign follows the same section structure as DESIGN.md but scoped to its subsystem.
+If Step 7 identified subsystems, write one file per subsystem under `subdesigns/` using `./templates/subdesign-template.md`. Each subdesign follows the same section structure as DESIGN.md but scoped to its subsystem.
 
 **Key rule:** DESIGN.md must link to every subdesign from its Design Overview section. A subdesign that isn't referenced from the index is invisible.
 
-## Step 9: Validate the Design Doc
+## Step 10: Validate the Design Doc
 
 Run the focused validation rules defined in `./reference/validation-rules.md` against the design directory.
 
@@ -163,14 +178,16 @@ The rules cover:
 - Subdesign integrity (all subdesigns referenced from DESIGN.md; each subdesign has required sections)
 - Cross-reference integrity (linked files exist on disk)
 
+If the repo's actual design-doc precedent (discovered in Step 5) conflicts with a generic rule here, trust the repo's real convention and note the discrepancy to the user rather than forcing the generic shape.
+
 If validation returns errors, fix them before proceeding. Warnings should be reviewed and addressed where appropriate.
 
-## Step 10: Present the Design Doc
+## Step 11: Present the Design Doc
 
 Present to the user:
 - Design directory location
 - Summary of sections and any subdesigns
-- ADR candidates flagged (with suggested next step: invoke `draft-adr` per candidate)
+- ADR candidates still pending (with suggested next step: invoke `draft-adr` per candidate) and any Related ADRs already drafted
 - Validation results
 
 If the user requests changes, update the relevant files, re-validate, and re-present.
@@ -183,7 +200,7 @@ If the user requests changes, update the relevant files, re-validate, and re-pre
 If the user provides a design without meaningful alternatives, push back:
 > The Alternatives Considered section is where a design doc earns its keep. Can you describe at least one alternative approach you considered and why you chose this one instead? Even a "do nothing" baseline counts.
 
-If the user genuinely identified no alternatives, document this honestly: "No viable alternatives identified" with an explanation of why. This often signals the work is better served by an execution plan than a design doc.
+If the user genuinely identified no alternatives, document this honestly: "No viable alternatives identified" with an explanation of why. This often signals the work is better served by an execution plan than a design doc. Don't manufacture a weak alternative just to fill the section — a single genuine one, documented honestly, is worth more than a padded list.
 
 ### Design Doc Not Warranted
 If Step 1 reveals the work doesn't meet any design-doc criteria, exit gracefully:
@@ -198,9 +215,9 @@ If subdesigns become necessary after the interview has started, pause and ask th
 
 - [ ] Design directory created at `docs/design/YYYY-MM-DD-<short-name>/`
 - [ ] DESIGN.md contains all required sections: Context, Design Overview, Alternatives Considered, Dependencies & Risks, Acceptance Criteria
-- [ ] Alternatives Considered has at least two alternatives with `(chosen)` marker and `**Why rejected:**` on non-chosen
+- [ ] Alternatives Considered has at least two genuinely-considered alternatives with `(chosen)` marker and `**Why rejected:**` on non-chosen — no strawmen
 - [ ] Subdesigns (if any) are linked from DESIGN.md and contain required sections
-- [ ] ADR candidates (if any) are flagged in DESIGN.md with triggers
+- [ ] ADR Candidates (if any pending) are flagged with triggers; decisions already drafted into real ADRs appear under Related ADRs instead
 - [ ] Validation passes without errors
 - [ ] User has reviewed the design doc
 

@@ -62,6 +62,8 @@ Protocol for gathering design context when the `draft-design-doc` skill is invok
 
 **Push back if needed.** A design doc without meaningful alternatives is usually a signal that the work would be better served by an execution plan. If the user insists there are no alternatives, ask whether the warrant check (Step 1 of the skill) should be revisited.
 
+**Don't push the user into manufacturing an alternative that was never real.** If probing genuinely turns up nothing else, accept that and document it honestly rather than settling for a strawman — an option nobody actually proposed, or a design nobody would defend — just to fill out the section.
+
 **After this round you should know:** At least two alternatives with substantive tradeoffs, including why each rejected alternative was ruled out.
 
 ## Round 4: Dependencies & Risks
@@ -113,6 +115,8 @@ For each candidate, capture:
 - The trigger criteria it matched ("new external dependency; hard to reverse")
 
 These flow into the DESIGN.md's ADR Candidates section. **Do not write the ADRs themselves** — the user can invoke `draft-adr` per candidate once the design is approved.
+
+If a decision already has a real ADR (drafted in a prior pass, or referenced by the user), it isn't a candidate — record it under Related ADRs instead, linking to the actual file.
 
 ## When to Stop
 

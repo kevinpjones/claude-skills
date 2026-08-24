@@ -8,6 +8,48 @@ ADRs capture **significant architectural decisions** with full context and trade
 
 **Merging an ADR is the act of adopting it.** There is no separate "proposed" to "accepted" workflow. An ADR on the main branch is the team's accepted decision. Debate happens in PR review, not in the ADR itself.
 
+## Immutability: What Can and Can't Change After Merge
+
+Unlike design docs, ADRs are not living documents. Once merged, the content sections — Context, Decision, Tradeoffs, Consequences — are never rewritten, not even to "clean up" phrasing. The record needs to reflect what was actually decided and why, at the time it was decided; rewriting it after the fact erases the thing future readers most need.
+
+Two narrow exceptions exist, both handled without touching the content sections:
+
+- **Corrections** — a purely factual fix (a typo, a broken link, a misstated number) that doesn't change the decision. Append a row to the Corrections table (see below). Never edit Context/Decision/Tradeoffs/Consequences to make the fix.
+- **Supersession** — when a later decision replaces this one. The old ADR is never deleted or rewritten; its header table's `Superseded by` field gets updated to point to the new ADR. That's the only header-table field that changes post-merge, and it's a pointer update, not a rewrite of reasoning.
+
+If you're asked to "fix" or "update" an existing merged ADR, first decide which case it is. If the requested change would alter the decision itself — not just correct a fact about it — it isn't a correction. Decline to edit the old ADR's content and propose a new ADR that supersedes it instead.
+
+## The Header Table
+
+Every ADR opens with a table right after the title:
+
+```markdown
+| | |
+|---|---|
+| **Supersedes** | [None, or links to prior ADRs this replaces] |
+| **Superseded by** | [None, or a link to the ADR that replaced this one] |
+| **Related** | [Links to related ADRs or design docs, or None] |
+```
+
+- **Supersedes** — set at authoring time if this ADR replaces one or more prior decisions. Link to them with relative paths.
+- **Superseded by** — left `None` at authoring time. Filled in later, on the *old* ADR, at the moment a new ADR supersedes it — the one legitimate post-merge edit to an ADR file.
+- **Related** — links to ADRs or design docs that inform or connect to this one, but don't supersede it. Unlike the other two fields, this can be extended after merge without being a "correction" — adding a cross-reference doesn't touch the decision.
+
+## The Corrections Table
+
+Directly below the header table:
+
+```markdown
+## Corrections
+
+| Correction |
+|---|
+```
+
+Leave it with just the header row when there's nothing to record — it's a placeholder, not something to delete. When a genuine factual correction is needed post-merge, append a row describing the fix in one line (e.g., "Fixed broken link to the payments ADR — was pointing at the wrong filename"). Don't add a date or author column: git blame on the file already carries that, and duplicating it invites drift.
+
+If you can't describe the fix in one line without touching what was actually decided, it's not a correction — see Immutability above.
+
 ## Writing Each Section
 
 ### Title
@@ -42,6 +84,12 @@ Write in past or present tense. Include:
 
 **Bad context:**
 > We need to change billing.
+
+**Name the actual trigger precisely.** If a specific event, threshold, or state change is what makes this decision necessary, name that exact thing rather than a loose paraphrase of it. "Ready to be transacting on the new system" and "ready to migrate onto the new system" sound similar but point at different decision points — get the real one right, since it's often what the Decision and Consequences sections hinge on.
+
+**Don't narrate the paper trail.** Skip mentions of the ticket, issue, or story that prompted this work ("The Jira story for this effort..."). That belongs in the commit message or PR description, which already link the ticket — the ADR should state the problem and constraint directly, not how it was reported to you.
+
+**Sometimes the decision is making an implicit convention explicit, not choosing between live options.** If the team has already been behaving a certain way in practice — just without a written rule or enforcement — say that. Frame the Context around "this was already true but unstated/unenforced" and the Decision as "we will make this explicit and enforced," rather than dressing it up as a choice between alternatives that were never really in contention. The Tradeoffs section still applies: what's gained by enforcing it (catches future drift, removes ambiguity) versus what's given up (less flexibility for legitimate exceptions).
 
 ### Decision
 
@@ -104,6 +152,7 @@ custom 3DS middleware in the interim.
 - Dismissing alternatives without genuine analysis
 - Treating tradeoffs as a formality ("there were no real alternatives")
 - Being vague: "it's better" — better *how*, at what cost?
+- **Inventing a strawman alternative just to have a second one.** An option nobody genuinely considered — a leaky abstraction, an approach that was never actually on the table — doesn't belong here even if it would satisfy a minimum-count rule. One real alternative, documented honestly, beats two where one is padding. If there's truly only one, say so in the Decision and let the interview's error-handling path (see the skill's `Insufficient Tradeoff Analysis` guidance) note that explicitly rather than manufacturing a second.
 
 ### Consequences
 
@@ -122,16 +171,13 @@ Cover both positive and negative consequences. Include:
 > - Webhook handlers must be updated to process PaymentIntent events
 >   alongside legacy Charge events during the transition period
 
-### Superseded By (Optional)
+### Supersession
 
-Only include when this decision has been replaced by a newer ADR.
-
-Format: `Superseded by: YYYY-MM-DD-new-decision-name.md`
-
-When superseding an ADR:
-- The old ADR gets a "Superseded by" field pointing to the new ADR
+Handled via the header table, not a body section — see "The Header Table" above. When superseding an ADR:
+- The new ADR's `Supersedes` field links to the old ADR
+- The old ADR's `Superseded by` field is updated to link to the new ADR — the one permitted post-merge edit
 - The new ADR's Context section should reference the old ADR and explain why the decision is being revisited
-- The old ADR is never deleted — it provides historical context
+- The old ADR is never deleted or rewritten — it provides historical context
 
 ## Tone and Style
 

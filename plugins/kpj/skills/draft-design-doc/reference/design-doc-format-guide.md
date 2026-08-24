@@ -33,6 +33,10 @@ Write in past or present tense. Give enough background that a reader unfamiliar 
 **Bad context:**
 > Ingestion is slow. We need to fix it.
 
+**Name the actual trigger precisely.** If a specific event, threshold, or state is what makes this design necessary, name that exact thing rather than a loose paraphrase — "ready to migrate onto the new system" and "ready to be transacting on the new system" sound similar but point at different decision points, and downstream sections often hinge on getting the real one right.
+
+**Don't narrate the paper trail.** Skip mentions of the ticket or story that prompted this work ("The Jira story for this effort..."). That belongs in the PR/commit, which already link the ticket — describe the problem and constraints directly.
+
 ### Design Overview
 
 **Answers:** What is the proposed architecture, and how does it work?
@@ -118,6 +122,7 @@ Use `### ` subheadings per alternative. The chosen alternative is marked `(chose
 - Dismissing alternatives without genuine analysis
 - Treating alternatives as a formality ("there were no real alternatives")
 - Being vague: "it's better" — better *how*, at what cost?
+- **Inventing a strawman alternative to hit a minimum count.** An option nobody actually proposed — a design that's a known leaky abstraction, or something no reasonable engineer would defend — doesn't belong here even if the validator wants two subheadings. One real alternative, argued honestly, is worth more than two where one is padding.
 
 **Push back if the user gives a thin alternatives section.** A design doc without meaningful alternatives is usually a signal that an execution plan would have been sufficient.
 
@@ -167,7 +172,20 @@ Architectural decisions identified during design that warrant their own Architec
 - **Event schema versioning via schema registry vs. embedded version field.** Trigger: real alternatives with meaningful tradeoffs.
 ```
 
-Omit this section entirely if no candidates were identified.
+Omit this section entirely if no candidates remain pending.
+
+### Related ADRs (Optional)
+
+Once a candidate is actually drafted into a real ADR (via `draft-adr`), it stops being a candidate — move its entry from ADR Candidates to Related ADRs, linking to the real file:
+
+```markdown
+## Related ADRs
+
+- [Use Kafka over SQS for the primary event stream](../../adr/2026-08-14-use-kafka-for-event-stream.md) — chosen for native ordering guarantees at required throughput.
+- [Keyed partitioning by tenant ID](../../adr/2026-08-14-tenant-keyed-partitioning.md) — preserves per-tenant ordering during broker failover.
+```
+
+Link to the ADR; don't restate its Context/Decision/Tradeoffs here — that duplication is exactly what ADRs exist to avoid. Omit this section if no ADRs have been drafted yet.
 
 ## Tone and Style
 
