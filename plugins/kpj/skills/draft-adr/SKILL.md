@@ -37,6 +37,8 @@ To determine the filename:
 3. If no ADRs exist for today, the filename is: `YYYY-MM-DD-<short-name>.md`
 4. If one or more ADRs already exist for today, append a sequence suffix: `YYYY-MM-DD-02-<short-name>.md`, `YYYY-MM-DD-03-<short-name>.md`, etc. Count existing files and use the next number.
 
+**Drafting several ADRs in one sitting** (e.g., a batch of decisions spawned by a single design doc): checking `docs/adr/` once before writing the first file undercounts every ADR after it, since none of the later ones exist on disk yet at check-time. Write each file (or at minimum, record its filename) as soon as its number is settled, and recompute the next ADR's suffix against that running list — including the ones you drafted earlier in this same batch, not just what was already on disk when you started.
+
 ## Step 3: Ensure `docs/adr/` Exists
 
 ```bash

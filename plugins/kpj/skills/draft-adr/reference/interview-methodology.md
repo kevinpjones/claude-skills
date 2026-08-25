@@ -8,6 +8,7 @@ Protocol for gathering decision context when the `draft-adr` skill is invoked st
 - Push for alternatives and tradeoffs — this is the core value of an ADR
 - Adapt based on answers; skip rounds where context is already clear
 - The user may end the interview early — proceed with what you have
+- **Don't invent the causal mechanism.** If the user's answer leaves *why* something actually happens or *what* an alternative would fix unconfirmed, don't paper over it with a plausible-sounding guess. Ask, or check the code — a root cause or rejected-alternative rationale that turns out to be wrong (e.g., citing a problem a system already handles) undermines the ADR for anyone who knows the system.
 
 ## Round 1: Context & Decision
 

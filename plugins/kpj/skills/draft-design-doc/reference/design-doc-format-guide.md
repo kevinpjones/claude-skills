@@ -187,6 +187,8 @@ Once a candidate is actually drafted into a real ADR (via `draft-adr`), it stops
 
 Link to the ADR; don't restate its Context/Decision/Tradeoffs here — that duplication is exactly what ADRs exist to avoid. Omit this section if no ADRs have been drafted yet.
 
+**Reference each ADR from exactly one place in the doc.** Related ADRs (or ADR Candidates, for pending ones) is that place. Don't also mention the same decision near the top of the doc or inline in Design Overview — a reader should have one spot to check, and a second listing drifts out of sync the moment the ADR is renamed, superseded, or moved.
+
 ## Tone and Style
 
 - **Be direct.** State facts and reasoning, not feelings.
@@ -195,6 +197,9 @@ Link to the ADR; don't restate its Context/Decision/Tradeoffs here — that dupl
 - **Use diagrams.** Mermaid blocks render in GitHub, most IDEs, and Claude Code itself. Prefer them to ASCII art or prose-only descriptions.
 - **Avoid jargon without context.** If a term is domain-specific, briefly define it or link to a reference.
 - **Keep Design Overview focused.** If it grows past ~500 lines, decompose into subdesigns.
+- **Formal third person. No "I" or "the user."** A design doc outlives the conversation that produced it. Write "the pipeline retries three times" or "we chose Kafka because Y," never "I found that..." or "the user wants...". Keep the register formal and objective — plain and direct, but not conversational or casual. If you're revising based on feedback, fold the fix into the sentence itself — don't leave a note explaining that a correction happened.
+- **No process narration.** Don't leave commentary meant for whoever is reviewing the draft in conversation — no "removed per feedback," no explanations of why a sentence changed. If a sentence exists only to justify an edit to the reviewer, delete it; it reads as a leftover once merged.
+- **Verify causal claims before writing them down.** Don't fill a gap in the Context or Alternatives with a plausible-sounding guess about why something happens or what a rejected alternative would or wouldn't fix. If you haven't confirmed the actual mechanism — via code exploration, existing docs, or the person who requested the doc — say so explicitly or ask, rather than asserting it as fact. A misdiagnosed root cause, or an alternative rejected for a reason that turns out not to be true (e.g., "prevents duplicate billing" when idempotency already handles that), invalidates the whole Alternatives analysis for anyone who knows the system.
 
 ## Tense and Voice
 

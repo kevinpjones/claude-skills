@@ -9,6 +9,7 @@ Protocol for gathering design context when the `draft-design-doc` skill is invok
 - **Detect ADR candidates continuously** — flag individual decisions as you go; don't wait until the end.
 - **Adapt based on answers** — skip rounds where context is already clear; probe deeper where it's thin.
 - **Allow early exit** — the user may end the interview and ask you to draft with what you have.
+- **Don't invent the causal mechanism.** If it's unconfirmed *why* something actually happens, or *what* a rejected alternative would or wouldn't fix, don't paper over the gap with a plausible-sounding guess. Ask, or check the code — a misdiagnosed root cause, or an alternative rejected for a reason that turns out to be false (e.g., citing a problem the system already handles via existing idempotency, retries, etc.), invalidates the analysis for anyone who knows the system.
 
 ## Round 1: Context & Constraints
 
