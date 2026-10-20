@@ -2,10 +2,11 @@
 /**
  * Finds or creates a pending PR review for the current user.
  *
- * Usage: manage-pending-review.mjs <owner> <repo> <pr_number> [--create]
+ * Usage: manage-pending-review.mjs <owner> <repo> <pr_number> [--create] [--comments]
  *
  * Options:
  *   --create    Create a new pending review if none exists
+ *   --comments  Include the pending review's comments (id, path, lines, body, diff hunk)
  *   --help      Show usage
  *
  * Output: JSON with review details:
@@ -14,7 +15,10 @@
  *     rest_id: number (REST API ID),
  *     state: "PENDING",
  *     user: string,
- *     existing_comments: number
+ *     created: boolean (true if this invocation created the review),
+ *     pr_url: string,
+ *     existing_comments: number,
+ *     comments?: [{ id, path, line, start_line, original_line, body, diff_hunk }]
  *   }
  *
  * If no pending review exists and --create is not set, exits with code 2 and
@@ -28,6 +32,7 @@ query($owner: String!, $repo: String!, $prNumber: Int!) {
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $prNumber) {
       id
+      url
       reviews(first: 20, states: PENDING) {
         nodes {
           id
@@ -39,6 +44,29 @@ query($owner: String!, $repo: String!, $prNumber: Int!) {
           comments {
             totalCount
           }
+        }
+      }
+    }
+  }
+}`;
+
+const PENDING_COMMENTS_QUERY = `
+query($reviewId: ID!, $cursor: String) {
+  node(id: $reviewId) {
+    ... on PullRequestReview {
+      comments(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          path
+          line
+          startLine
+          originalLine
+          body
+          diffHunk
         }
       }
     }
@@ -120,6 +148,8 @@ async function findPendingReview(owner, repo, prNumber) {
   if (myReview) {
     return {
       pr_id: pr.id,
+      pr_url: pr.url,
+      created: false,
       review_id: myReview.id,
       rest_id: myReview.databaseId,
       state: myReview.state,
@@ -128,7 +158,42 @@ async function findPendingReview(owner, repo, prNumber) {
     };
   }
 
-  return { pr_id: pr.id, review_id: null };
+  return { pr_id: pr.id, pr_url: pr.url, review_id: null };
+}
+
+async function fetchPendingComments(reviewId) {
+  const comments = [];
+  let cursor = null;
+
+  do {
+    const args = [
+      'api', 'graphql',
+      '-f', `query=${PENDING_COMMENTS_QUERY}`,
+      '-f', `reviewId=${reviewId}`,
+    ];
+    if (cursor) args.push('-f', `cursor=${cursor}`);
+
+    const response = JSON.parse(await runGh(args));
+    if (response.errors) {
+      throw new Error(`GraphQL errors: ${JSON.stringify(response.errors)}`);
+    }
+
+    const page = response.data.node.comments;
+    for (const c of page.nodes) {
+      comments.push({
+        id: c.id,
+        path: c.path,
+        line: c.line,
+        start_line: c.startLine,
+        original_line: c.originalLine,
+        body: c.body,
+        diff_hunk: c.diffHunk,
+      });
+    }
+    cursor = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+  } while (cursor);
+
+  return comments;
 }
 
 async function createReview(prId) {
@@ -150,6 +215,7 @@ async function createReview(prId) {
     rest_id: review.databaseId,
     state: review.state,
     user: review.author?.login,
+    created: true,
     existing_comments: review.comments.totalCount,
   };
 }
@@ -158,19 +224,22 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`Usage: manage-pending-review.mjs <owner> <repo> <pr_number> [--create]
+    console.log(`Usage: manage-pending-review.mjs <owner> <repo> <pr_number> [--create] [--comments]
 
 Options:
   --create    Create a new pending review if none exists
+  --comments  Include the pending review's comments
 
 Examples:
   manage-pending-review.mjs octocat repo 42
-  manage-pending-review.mjs octocat repo 42 --create`);
+  manage-pending-review.mjs octocat repo 42 --create
+  manage-pending-review.mjs octocat repo 42 --comments`);
     process.exit(0);
   }
 
   const positional = args.filter(a => !a.startsWith('-'));
   const shouldCreate = args.includes('--create');
+  const includeComments = args.includes('--comments');
 
   if (positional.length < 3) {
     console.error('Error: owner, repo, and pr_number are required');
@@ -180,12 +249,19 @@ Examples:
   const [owner, repo, prNumber] = positional;
 
   try {
-    const result = await findPendingReview(owner, repo, parseInt(prNumber, 10));
+    const found = await findPendingReview(owner, repo, parseInt(prNumber, 10));
 
-    if (result.review_id) {
-      console.log(JSON.stringify(result, null, 2));
+    let review = null;
+    if (found.review_id) {
+      review = found;
     } else if (shouldCreate) {
-      const review = await createReview(result.pr_id);
+      review = { pr_id: found.pr_id, pr_url: found.pr_url, ...(await createReview(found.pr_id)) };
+    }
+
+    if (review) {
+      if (includeComments) {
+        review.comments = await fetchPendingComments(review.review_id);
+      }
       console.log(JSON.stringify(review, null, 2));
     } else {
       console.log(JSON.stringify({ review_id: null, message: 'No pending review found' }));
