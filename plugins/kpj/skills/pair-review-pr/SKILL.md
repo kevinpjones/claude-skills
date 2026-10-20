@@ -213,7 +213,7 @@ Present a numbered summary table to the user. Include duplicate status in the ta
 The user's comments are their review; your job is to make them read well and hold up, not to replace their judgment.
 
 1. **Verify each comment's factual claims against the code** (and any other repos it references). When a comment conflicts with what the code shows, don't silently "fix" it — raise it as a question with the evidence (file and line), and offer to keep their framing, reword it, or delete it. Resolve these first, since the answer can change other revisions.
-2. **Draft a revision** of each comment: clear, professional, plain language per `./reference/comment-formatting.md`, preserving the user's intent and position. Expand terse notes into complete sentences, add code references, permalinks, or suggestion blocks where they help, and fold in overlapping sub-agent detail from Step 6. Comments that already read well can stay as they are — say so instead of rewording for its own sake.
+2. **Draft a revision** of each comment following "Writing Concise, Clear Comments" in `./reference/comment-formatting.md`: point, then evidence, then an assertive action, in the user's voice and keeping their position. Expand terse notes into complete sentences. Add code references, permalinks, or suggestion blocks only when they make the point more convincing, and fold in overlapping sub-agent detail from Step 6 only if it does too. Comments that already read well can stay as they are; say so instead of rewording them for its own sake.
 3. **Present each one for approval** following Step 8b's display rules, with both versions inside the question:
    ```
    U3 — DESIGN.md:37-38
@@ -258,9 +258,9 @@ For EACH file-specific finding (in priority order), follow this approval loop:
 
 ### 8a. Format the Comment
 
-Format using the patterns in `./reference/comment-formatting.md`:
+Format using the patterns in `./reference/comment-formatting.md`, and write the body by its "Writing Concise, Clear Comments" rules. Sub-agent findings tend to arrive as full explanations, so condense them to the point, one piece of evidence, and one action:
 - Write in plain language — NO structured headers, severity badges, or category labels
-- For high/critical severity only, prefix with `🚨 URGENT —` or similar emoji callout
+- No emoji or severity prefixes (such as `🚨 URGENT —`) at any severity
 - Add code snippets using markdown fenced blocks
 - Use GitHub `suggestion` blocks for concrete single-hunk fixes
 - Generate permalinks for cross-references to existing codebase code:
@@ -275,13 +275,16 @@ Format using the patterns in `./reference/comment-formatting.md`:
 
 **Use the AskUserQuestion tool** to present each comment for approval.
 
-Put the **complete comment body, exactly as it will be posted, inside the `question` field itself**. Prose written before the tool call can render collapsed in the terminal, and the `preview` panel truncates long lines, so the user may otherwise approve text they never saw. Never summarize or paraphrase the body ("same as before, but…"). For several items, use one question per item (up to 4 per AskUserQuestion call) rather than one batched question that refers to text above it. Use the numbering from the consolidated table (`#3`, `U2`), not a renumbered "N of M". The same rule applies to the review summary in Step 9c.
+Put the **complete comment body, exactly as it will be posted, inside the `question` field itself**. Prose written before the tool call can render collapsed in the terminal, and the `preview` panel truncates long lines, so the user may otherwise approve text they never saw. Never summarize or paraphrase the body ("same as before, but…"). Present **one comment per AskUserQuestion call**: long comments batched together are hard to read, and the user ends up rejecting the whole batch to discuss one item. Use the numbering from the consolidated table (`#3`, `U2`), not a renumbered "N of M". The same rule applies to the review summary in Step 9c.
+
+**Show the code alongside the comment where possible.** Before each approval question, open the comment's file at its start line in the user's editor if you have a way to: an IDE or editor integration (an MCP server, a skill, or a CLI launcher) that works with what the user has open. If it can open files but can't jump to a line, open the file and put the line in the question. Opening the file is a convenience. If it fails, mention it once and carry on without it, rather than retrying for every comment.
 
 The presentation MUST include:
 
 1. **Comment source** — clearly indicate which sub-agent produced the finding (e.g., "Source: code-reviewer") or "Source: user-generated" for user feedback from Step 4
 2. **File and line** — where the comment will be posted
-3. **The fully formatted comment body** — as it will appear on GitHub
+3. **Affected by the user's comments** (pending-review mode) — for sub-agent findings, say whether the user's comments changed it ("Affected by your comments: no" / "yes, revised: <what changed and why>"). Revise findings whose premise the user's comments change. Don't present findings the user's comments make moot; list them in one line instead.
+4. **The fully formatted comment body** — as it will appear on GitHub
 
 Format: `"#N — [file:line] — Source: [agent-name|user-generated]\n\n<full comment body>\n\nApprove / Edit / Skip?"`
 
@@ -356,7 +359,8 @@ Write a concise review summary in plain language that includes:
 
 1. **Overall assessment** — one or two sentences on the PR's approach and quality
 2. **General comments** — any cross-cutting concerns, architectural observations, or patterns noticed across the PR that don't belong on a specific diff line
-3. **Key inline highlights** — brief mention of the most important inline comments posted (high severity), so the author knows what to prioritize
+
+Don't restate the inline comments; they speak for themselves. The exception is an inline point that directly shapes something in the summary (for example, what goes into a split-out PR). Keep the summary as concise as the inline comments (see `./reference/comment-formatting.md`).
 
 Format as plain markdown. No structured headers like "Severity: high". Keep the tone constructive and direct.
 
@@ -367,8 +371,6 @@ The decomposition of the monolithic handler into pipeline stages is a solid appr
 
 - The error recovery strategy differs between stages — stage 1 retries silently while stage 3 throws immediately. Consider standardizing error handling across all stages.
 - Several of the new utility functions duplicate existing helpers in `src/utils/` (see inline comments).
-
-The most important inline comments are the missing null check in `processOrder.ts:42` and the unhandled promise rejection in `pipeline.ts:78`.
 ```
 
 ### 9c. Present for Approval
