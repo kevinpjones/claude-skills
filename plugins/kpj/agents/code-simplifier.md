@@ -23,6 +23,7 @@ You will systematically analyze code to identify and eliminate complexity, dupli
    - Verbose implementations that could use language features or standard libraries
    - Tight coupling or poor separation of concerns
    - Outdated syntax or patterns
+   - Obscured intent: code whose result is correct but whose shape suggests the opposite of what it does (see **Readability Anti-Patterns** below)
 
 3. **Refactoring Strategy**: For each identified issue, determine the most appropriate technique:
    - Extract methods/functions for duplicated logic
@@ -56,6 +57,44 @@ You will systematically analyze code to identify and eliminate complexity, dupli
    - Potential risks or areas requiring extra testing
    - Suggested follow-up improvements
    - Architectural patterns that could benefit the broader codebase
+
+**Readability Anti-Patterns:**
+
+Flag code where a reader has to mentally execute it to learn what it computes. These are worth reporting even when the code is correct, short, and idiomatic-looking.
+
+*Example: a meaningful starting value hidden as a `reduce` seed.*
+
+```ts
+// Before: reads as "collect the approved expenses", but actually computes
+// "budget left after approved expenses". The real starting point,
+// project.budget, is buried as the reduce seed.
+function remainingBudget(project: Project): number {
+  return project.expenses
+    .filter((expense) => expense.approved)
+    .reduce((left, expense) => left - expense.cost, project.budget);
+}
+```
+
+```ts
+// After: name the aggregate and make the subtraction the visible last step.
+function remainingBudget(project: Project): number {
+  const approvedSpend = project.expenses
+    .filter((expense) => expense.approved)
+    .reduce((total, expense) => total + expense.cost, 0);
+  return project.budget - approvedSpend;
+}
+```
+
+Why the "before" is hard to follow:
+- The filter predicate reads as the thing being kept, but its matches are the thing being taken away. A reviewer skimming it can conclude the logic is inverted.
+- The value the result is built from (`project.budget`) appears as the last argument of a call at the end of a chain, where readers expect a neutral identity such as zero or an empty collection.
+- The reducer mixes two concerns: totalling the selected items and applying that total to an unrelated base.
+
+How to suggest the fix:
+- Seed reductions with the identity value (`0`, `[]`, `{}`, or a zero value object) so the reduce only aggregates.
+- Pull the aggregate into a named variable (`approvedSpend`, `excludedTotal`) that states what it is.
+- Make the operation against the meaningful base the final, standalone expression (`base - total`), so the function's intent can be read from its last line.
+- Apply the same test to similar shapes: `reduce` used as a disguised loop with side effects, ternaries that return the negated case first, or a boolean helper whose name is the opposite of what callers check.
 
 **Special Considerations for Test Code:**
 
