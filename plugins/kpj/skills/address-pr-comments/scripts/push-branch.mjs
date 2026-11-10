@@ -18,6 +18,7 @@
 import { spawn } from 'child_process';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { fileURLToPath } from 'url';
 
 const execAsync = promisify(exec);
 
@@ -266,7 +267,9 @@ async function main() {
         console.error(`Updating comment links for PR #${prNumber} (${branch})...`);
         if (!dryRun) {
           try {
-            const scriptPath = `${process.env.HOME}/.claude/skills/manage-stacked-pr/scripts/update-pr-comment-links.mjs`;
+            const scriptPath = fileURLToPath(
+              new URL('../../manage-stacked-pr/scripts/update-pr-comment-links.mjs', import.meta.url)
+            );
             const { stdout } = await execAsync(`${scriptPath} ${owner} ${repo} ${prNumber}`);
             const linkResult = JSON.parse(stdout);
             results.operations.push({
