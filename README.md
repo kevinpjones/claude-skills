@@ -64,7 +64,9 @@ Manages stacked PR workflows using native git and GitHub CLI. Tracks stack relat
 
 Collaborative pair-review style PR code review that coordinates multiple AI sub-agent reviewers in parallel (code-simplifier, code-reviewer, typescript-enforcer, efficiency-reviewer), collects user feedback, detects duplicate comments against existing threads (resolved and unresolved), and publishes approved comments to a GitHub PR review. Each comment requires user approval before posting; the review itself is left pending for the user to finalize.
 
-**Invoke with:** `/pair-review-pr [PR number or URL]`
+The user's own comments and the approvals can come from the chat, from a pending GitHub review, or from the Pair Review IDE plugin (`--plugin`, with its `pair-review-plugin` skill), where comments are written and decided next to the code.
+
+**Invoke with:** `/pair-review-pr [PR number or URL] [--pending-review | --plugin]`
 
 ### update-pr-description
 

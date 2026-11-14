@@ -1,17 +1,18 @@
 ---
 name: pair-review-pr
-description: Use this skill for collaborative pair-review style PR code review that coordinates multiple AI sub-agent reviewers in parallel (code-simplifier, code-reviewer, typescript-enforcer, efficiency-reviewer), collects user feedback, and publishes refined comments to a GitHub PR review. Supports a pending-review mode where the user leaves their own draft comments on GitHub as input, which are then revised in place and merged with the sub-agent findings. Trigger keywords include "pair review", "collaborative review", "pair review PR", "co-review", "review PR together", "multi-agent review", "I'll leave comments on GitHub", "use my pending review", "review with pending comments".
-argument-hint: "[PR number or URL (optional if on PR branch)] [--pending-review]"
+description: Use this skill for collaborative pair-review style PR code review that coordinates multiple AI sub-agent reviewers in parallel (code-simplifier, code-reviewer, typescript-enforcer, efficiency-reviewer), collects user feedback, and publishes refined comments to a GitHub PR review. Supports a pending-review mode where the user leaves their own draft comments on GitHub as input, which are then revised in place and merged with the sub-agent findings. Also supports a plugin mode where the user writes and approves comments in the Pair Review IDE plugin instead of the terminal. Trigger keywords include "pair review", "collaborative review", "pair review PR", "co-review", "review PR together", "multi-agent review", "I'll leave comments on GitHub", "use my pending review", "review with pending comments", "use the Pair Review plugin", "review in the IDE", "approve in IntelliJ".
+argument-hint: "[PR number or URL (optional if on PR branch)] [--pending-review | --plugin]"
 ---
 
 # Collaborative PR Review
 
 Orchestrate parallel AI code reviews, collect user feedback, and publish refined comments to GitHub PR reviews. Each comment requires user approval before posting. The review itself is never submitted without the user's explicit choice.
 
-The user's own feedback arrives in one of two **input modes** (see Prerequisites §4):
+The user's own feedback arrives in one of three **input modes** (see Prerequisites §4):
 
 - **Chat mode** (default) — the user types observations into the conversation after the sub-agents finish.
 - **Pending-review mode** — the user writes draft comments directly on GitHub, in a pending review, while the sub-agents run. Those comments are the user's input: they get revised in place, and sub-agent findings are deduped against them.
+- **Plugin mode** — the user writes draft comments in the IDE with the Pair Review plugin while the sub-agents run, and then approves everything there, next to the code, instead of in terminal dialogs. The `pair-review-plugin` skill describes how to drive the plugin; this skill says what to send it and what to do with the answers.
 
 # Prerequisites
 
@@ -41,6 +42,8 @@ Store `owner`, `repo`, `pr_number`, `branch`, `base_branch` for all subsequent s
 
 ## 4. Choose Input Mode
 
+Use **plugin mode** when the user asks for it (`--plugin`, "use the Pair Review plugin", "review in the IDE", "I'll approve them in IntelliJ"). It needs the `pair-review-plugin` skill and the plugin's `review_*` MCP tools: load that skill and make its availability check before committing to the mode. If the plugin is not reachable, say so and offer the other two modes.
+
 Use **pending-review mode** when the user asks for it (`--pending-review`, "I'll leave comments on GitHub", "use my pending review", "I've already started a review") or when a pending review of theirs already has comments. Otherwise use **chat mode**. If the signal is ambiguous, ask once.
 
 To check for an existing pending review without creating one:
@@ -66,6 +69,20 @@ This reuses the user's existing pending review if there is one (GitHub allows on
 > I created a pending review on #<N> (or: I'll use your existing pending review on #<N>, which has <K> comments). Add your comments here: <pr_url>/files
 >
 > Use **Add review comment** / **Start a review** on each line, not **Add single comment** — single comments post immediately and won't be in the pending review. Don't submit the review; I'll add to it and you'll finalize at the end. I'll run the sub-agent reviewers in the meantime and wait for you to tell me you're done.
+
+Then continue with Step 1 without waiting.
+
+# Plugin Mode Setup
+
+Skip this section in the other modes.
+
+First make sure the PR's head branch is checked out in the project that is open in the IDE. The plugin shows every comment against the files in that working directory, so with another branch checked out the comments land on the wrong lines and the user can't open the PR in the IDE's pull-request view. Compare the checked-out branch with `branch` from Prerequisites §3; if they differ and the working tree is clean, check the PR branch out and pull it. If there are uncommitted changes, don't stash or switch on your own: say what is checked out and ask.
+
+Then open the session **before** collecting the diff, so the user can start writing while you do the rest of the setup. Following the `pair-review-plugin` skill, start (or resume) a session for the PR with `kind: "pr"`, the `owner`, `repo`, `number`, head `branch` and PR `url` from Prerequisites §3, and the `stackId` when the PR is part of a stack. A resumed session keeps the comments and decisions already in it; don't reset one unless the user wants to start over.
+
+Then notify the user in plain text:
+
+> The Pair Review tool window is open on #<N>. Add your own comments there: select the lines in the editor and choose **Add Pair Review Comment…**. I'll run the sub-agent reviewers in the meantime. When you're done, click **Hand Off to Agent**.
 
 Then continue with Step 1 without waiting.
 
@@ -129,7 +146,7 @@ Any other files provided below are for context only — do NOT produce findings 
 
 Each agent MUST report findings in the structured JSON format defined in `./reference/sub-agent-review-prompts.md`.
 
-Launch all selected agents in a single message for true parallel execution. In pending-review mode, run them in the background so the conversation stays free while the user writes comments on GitHub.
+Launch all selected agents in a single message for true parallel execution. In pending-review and plugin mode, run them in the background so the conversation stays free while the user writes their comments.
 
 ## Step 4: Collect User Feedback
 
@@ -155,6 +172,14 @@ Once released, fetch the pending comments fresh — the user may have added, edi
 
 Each comment becomes a **user comment** (`U1`, `U2`, … in file/line order) carrying its `id`, `path`, `line`, `start_line` and `body`. These are handled in Step 6a, not as new findings. If the review has no comments, tell the user and fall back to chat mode for this step.
 
+### Plugin mode
+
+Wait for **both** of these: every sub-agent has reported, and the user has handed off in the plugin. The hand-off replaces the typed "done"; wait for it as the `pair-review-plugin` skill describes, and don't react to comments the user is still writing.
+
+When the last sub-agent reports before the hand-off, say so in one plain-text line with the counts, and keep waiting. Don't push findings into the plugin yet: the user's independent read is the point, as in pending-review mode.
+
+Once handed off, list the session's comments. The ones the user wrote there (source `manual`) are the **user comments**, with their ids, file, lines and body. They are handled in Step 6a. If there are none, carry on without user comments.
+
 ### Chat mode
 
 After sub-agents complete, **use the AskUserQuestion tool** to ask the user:
@@ -174,6 +199,8 @@ Fetch ALL existing review threads (resolved AND unresolved):
 ```
 
 **IMPORTANT**: This MUST include resolved threads. Previously addressed feedback should not be re-raised.
+
+In plugin mode, also send the threads to the plugin (the plugin skill's "existing threads" step), using each thread's GitHub id as its `id`, so the user sees them beside the drafts and duplicates can link to them.
 
 In pending-review mode, the results may include the user's own pending threads. Exclude any thread whose comment IDs match the pending comments from Step 4, so findings aren't marked as duplicates of the user's input (that comparison happens in Step 6a instead).
 
@@ -198,7 +225,9 @@ Aggregate all findings from sub-agents and user feedback into a single prioritiz
 
 In pending-review mode, also compare each finding against the user's pending comments (Step 4). When a finding covers the same concern, don't raise it separately: either drop it, or — if it adds a concrete detail the user's comment lacks — fold that detail into the revision of their comment in Step 6a and note which finding was folded in. Mark the remaining findings `Partial (U3)` etc. where they overlap a user comment without duplicating it.
 
-Present a numbered summary table to the user. Include duplicate status in the table:
+In plugin mode, treat the comments the user wrote in the plugin the way pending-review mode treats pending comments: dedupe findings against them and fold in overlapping detail. Skip the summary table below; the plugin's list is the overview. Carry each finding's numbering, duplicate status and the id of the thread it overlaps into Step 8.
+
+In the other modes, present a numbered summary table to the user. Include duplicate status in the table:
 
 ```
 | # | File | Line(s) | Severity | Category | Source | Dup? | Description |
@@ -208,7 +237,7 @@ Present a numbered summary table to the user. Include duplicate status in the ta
 | 3 | src/api.ts | 8-12 | medium | Type Safety | ts-enforcer | Partial | Overlaps open thread on unsafe cast |
 ```
 
-## Step 6a: Revise the User's Pending Comments (pending-review mode only)
+## Step 6a: Revise the User's Comments (pending-review and plugin mode)
 
 The user's comments are their review; your job is to make them read well and hold up, not to replace their judgment.
 
@@ -238,9 +267,11 @@ The user's comments are their review; your job is to make them read well and hol
 
 Then present the remaining sub-agent findings (Step 8) — they're added to the same pending review.
 
+**In plugin mode** do items 1 and 2 as written, then stop: don't ask for approval here and don't post anything. Each revision goes to the plugin in Step 8 as an update of the user's comment (same id) carrying their text as `original_body` and your revision as `body`, so they see both side by side and choose between approving the revision, editing, keeping their original, or deleting. Put a factual conflict in the recommendation: recommend `edit` and give the evidence as the rationale.
+
 ## Step 7: Manage Pending Review
 
-In pending-review mode the review already exists (`review_id` from setup) — skip this step.
+In pending-review mode the review already exists (`review_id` from setup) — skip this step. In plugin mode do this step as in chat mode: the plugin collects decisions, and the pending GitHub review is still where approved comments are posted.
 
 Find or create a pending GitHub PR review:
 
@@ -254,7 +285,16 @@ Store the `review_id` for attaching comments.
 
 **Only process file-specific findings here.** General findings (with `file: null`) are handled in Step 9.
 
-For EACH file-specific finding (in priority order), follow this approval loop:
+**In plugin mode** this step's approval loop (8b) is replaced by the plugin's comment cycle, and general findings go to the plugin too:
+
+1. Format every comment as in 8a.
+2. Send them all in one call, following the `pair-review-plugin` skill: each sub-agent finding with its number as `id`, its sub-agent as `source` (for a finding merged from several sub-agents in Step 6, all of them as the `sources` list, not one comma-joined name), severity, category, the formatted `body`, a `recommendation` with rationale (for duplicates, the recommended action from the table in 8b), and its duplicate status with the overlapping thread's id; each revised user comment from Step 6a; and each general finding without a file.
+3. Run the plugin skill's wait, read, reply and rework loop until every comment is decided, or the user hands off with the rest left pending on purpose. Answer notes that need a reply from what you know about the PR; rework comments marked needs-revision by the rules in `./reference/comment-formatting.md`.
+4. Post according to each decision, using the text the plugin returns as final: a comment to publish goes through 8c; comments the user declined are skipped. User comments written in the plugin exist only there until now, so an accepted one is posted like any other.
+
+Then go to Step 9. Don't also ask for approvals in the terminal.
+
+**In the other modes**, for EACH file-specific finding (in priority order), follow this approval loop:
 
 ### 8a. Format the Comment
 
@@ -375,7 +415,9 @@ The decomposition of the monolithic handler into pipeline stages is a solid appr
 
 ### 9c. Present for Approval
 
-**Use the AskUserQuestion tool** to present the draft summary, with the full summary text inside the question (see Step 8b). They can:
+In plugin mode, send the draft and your recommended review type (Step 10a) to the plugin as the review summary, wait for the hand-off, and read back the user's decision on the body and their chosen verdict. That answer also settles Step 10b.
+
+Otherwise, **use the AskUserQuestion tool** to present the draft summary, with the full summary text inside the question (see Step 8b). They can:
 - **Approve**: Use as the review body
 - **Edit**: Revise and re-present
 - **Skip**: No summary body (user will write their own on GitHub)
@@ -415,6 +457,8 @@ How would you like to finalize this review?
 
 Include your recommendation (e.g., "Recommended: option 3 — Request Changes").
 
+In plugin mode, skip the question: the verdict the user chose on the plugin's summary is the answer (`approve`, `comment`, `request_changes`, or `none` for leaving the review pending).
+
 ### 10c. Execute the User's Choice
 
 **If the user chose to submit (options 1-3):**
@@ -425,7 +469,7 @@ Include your recommendation (e.g., "Recommended: option 3 — Request Changes").
   --body-file /tmp/pr-review-summary-<OWNER>-<REPO>-<PR_NUMBER>.md
 ```
 
-Report the result including the review URL from the script output.
+Report the result including the review URL from the script output. In plugin mode, then mark the review submitted in the plugin with that URL, which makes the session read-only and gives the user a link to the review. Leave the session open.
 
 **If the user chose to copy to clipboard (option 4):**
 
@@ -445,7 +489,7 @@ After submission (or skip), provide a final summary:
 
 ```
 ## Review Complete
-- **Your comments** (pending-review mode): N revised in place, N kept as written, N deleted
+- **Your comments** (pending-review and plugin mode): N revised, N kept as written, N deleted
 - **Posted**: N inline comments (H high, M medium, L low)
 - **Skipped**: N comments
 - **Duplicates avoided**: N (already covered by existing threads)
@@ -465,6 +509,8 @@ After submission (or skip), provide a final summary:
 | Duplicate detected | Present to user with existing thread preview and recommendation |
 | User submitted the pending review early | `manage-pending-review.mjs` finds none; tell the user, then post remaining comments to a new pending review |
 | Updating a pending comment fails | Show the error and the revised text so the user can paste it on GitHub; continue with the rest |
+| Pair Review plugin not reachable (plugin mode) | Tell the user, then continue in chat or pending-review mode with the work done so far |
+| Plugin session closed, or already submitted and read-only | Stop the plugin cycle and ask the user whether to start a fresh session |
 | `gh` not authenticated | Run `./scripts/check-prerequisites.mjs` and follow its guidance |
 
 # Scripts Reference
