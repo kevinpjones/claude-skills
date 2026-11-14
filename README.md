@@ -44,9 +44,15 @@ Resumes work on an existing [Memory Bank](https://github.com/kevinpjones/memory-
 
 ### address-pr-comments
 
-Systematically works through unresolved PR review comments: fetches threads via the GitHub GraphQL API, makes code changes, commits fixes, replies with commit links, and resolves threads. Supports declining feedback with professional justifications and skipping comments.
+Systematically works through unresolved PR review comments: fetches threads via the GitHub GraphQL API, makes code changes, commits fixes, replies with commit links, and resolves threads. Supports declining feedback with professional justifications and skipping comments. An `--unattended` mode (with `--author`, `--no-push`, and `--summary-file`) processes bot findings without prompts for callers such as `run-agentic-review-loop`.
 
-**Invoke with:** `/address-pr-comments [PR link or number]`
+**Invoke with:** `/address-pr-comments [PR link or number] [--unattended] [--author <login>]...`
+
+### run-agentic-review-loop
+
+Drives a PR to a clean automated review. It triggers a review bot, waits for the bot's review of the head commit, hands the bot's findings to `address-pr-comments` (unattended), pushes, and repeats until a review finds nothing new or an iteration cap is reached. The reviewer is configurable: Qodo's `/agentic_review` is the default, and Copilot or other bots can be set through `.claude/review-loop.json` or arguments. Supports PR stacks bottom-up.
+
+**Invoke with:** `/run-agentic-review-loop [PR number or URL] [--stack] [--max-iterations N] [--mark-ready]`
 
 ### build-skill
 
@@ -101,6 +107,7 @@ Several skills reference each other:
 
 - **manage-stacked-pr** uses `address-pr-comments` for resolving review threads across a stack and `update-pr-description` for writing PR bodies.
 - **address-pr-comments** operates standalone but integrates naturally into the stacked PR review workflow.
+- **run-agentic-review-loop** delegates all fixing, replying, and resolving to `address-pr-comments --unattended`. It symlinks that skill's `get-pr-context.mjs`, `fetch-unresolved-threads.mjs`, and `push-branch.mjs`.
 - **update-pr-description** reads from Memory Bank projects (via [memory-bank-mcp](https://github.com/kevinpjones/memory-bank-mcp/)) for project context when generating PR descriptions.
 - **pair-review-pr** orchestrates parallel sub-agent code reviews, collects user feedback, and publishes approved comments to GitHub PR reviews. Symlinks shared scripts from `address-pr-comments`.
 - **initialize-memory-bank-project** creates the Memory Bank project structure that `update-pr-description` and `resume-memory-bank-project` read from.

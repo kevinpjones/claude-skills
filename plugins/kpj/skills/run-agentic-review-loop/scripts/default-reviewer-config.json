@@ -1,0 +1,21 @@
+{
+  "reviewerName": "Qodo",
+  "botLogins": ["qodo-code-review[bot]"],
+  "trigger": {
+    "type": "comment",
+    "body": "/agentic_review",
+    "extraArgs": ""
+  },
+  "completionSignal": {
+    "type": "comment-match",
+    "pattern": "updated up to the latest commit \\S*/commit/{headSha}"
+  },
+  "summaryComment": {
+    "marker": "Code Review by Qodo",
+    "newFindingMarker": "⭐ New"
+  },
+  "pollIntervalSeconds": 60,
+  "timeoutMinutes": 15,
+  "maxIterations": 8,
+  "markReadyWhenClean": false
+}
