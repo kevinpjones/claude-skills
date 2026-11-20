@@ -15,10 +15,11 @@
  * Output: JSON array of unresolved threads with structure:
  *   {
  *     thread_id: string,
+ *     url: string,          // permalink of the thread's first comment
  *     is_outdated: boolean,
  *     code_context: { file, lines, type, line_start?, line_end?, line_number? },
  *     diff_side: "LEFT" | "RIGHT",
- *     comments: [{ id, body, author: { login }, createdAt }]
+ *     comments: [{ id, body, url, author: { login, avatarUrl }, createdAt }]
  *   }
  */
 
@@ -48,8 +49,10 @@ query($owner: String!, $repo: String!, $prNumber: Int!, $after: String) {
             nodes {
               id
               body
+              url
               author {
                 login
+                avatarUrl
               }
               createdAt
               updatedAt
@@ -131,6 +134,7 @@ function transformThreads(threads, { authors, excludeOutdated }) {
     })
     .map(thread => ({
       thread_id: thread.id,
+      url: thread.comments.nodes[0]?.url ?? null,
       is_outdated: thread.isOutdated,
       code_context: getCodeContext(thread.path, thread.line, thread.startLine, thread.subjectType),
       diff_side: thread.diffSide,

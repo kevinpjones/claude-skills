@@ -44,9 +44,9 @@ Resumes work on an existing [Memory Bank](https://github.com/kevinpjones/memory-
 
 ### address-pr-comments
 
-Systematically works through unresolved PR review comments: fetches threads via the GitHub GraphQL API, makes code changes, commits fixes, replies with commit links, and resolves threads. Supports declining feedback with professional justifications and skipping comments. An `--unattended` mode (with `--author`, `--no-push`, and `--summary-file`) processes bot findings without prompts for callers such as `run-agentic-review-loop`.
+Systematically works through unresolved PR review comments: fetches threads via the GitHub GraphQL API, makes code changes, commits fixes, replies with commit links, and resolves threads. Supports declining feedback with professional justifications and skipping comments. An `--unattended` mode (with `--author`, `--no-push`, and `--summary-file`) processes bot findings without prompts for callers such as `run-agentic-review-loop`. A `--plugin` mode moves triage and approval into the Pair Review IDE plugin: every thread gets an assessment, a recommended action and a drafted reply beside the code, and fixes, replies and resolutions follow the decisions made there.
 
-**Invoke with:** `/address-pr-comments [PR link or number] [--unattended] [--author <login>]...`
+**Invoke with:** `/address-pr-comments [PR link or number] [--plugin | --unattended] [--author <login>]...`
 
 ### run-agentic-review-loop
 

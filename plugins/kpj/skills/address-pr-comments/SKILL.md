@@ -1,7 +1,7 @@
 ---
 name: address-pr-comments
-description: Use this skill when addressing, resolving, or working through PR review comments. This includes checking out a PR branch, fetching unresolved review threads, making code changes to address feedback, committing fixes, adding reply comments, and resolving threads. Trigger keywords include "PR comments", "review feedback", "address feedback", "resolve comments", "fix PR", "review threads".
-argument-hint: "[PR link or number] [--unattended] [--author <login>]... [--no-push] [--summary-file <path>]"
+description: Use this skill when addressing, resolving, or working through PR review comments. This includes checking out a PR branch, fetching unresolved review threads, making code changes to address feedback, committing fixes, adding reply comments, and resolving threads. Supports a plugin mode where the user triages every thread, approves each reply and chooses what gets resolved in the Pair Review IDE plugin, next to the code, instead of in terminal dialogs. Trigger keywords include "PR comments", "review feedback", "address feedback", "resolve comments", "fix PR", "review threads", "address the comments in the plugin", "respond to the review in the IDE", "use the Pair Review plugin".
+argument-hint: "[PR link or number] [--plugin | --unattended] [--author <login>]... [--no-push] [--summary-file <path>]"
 ---
 
 # Addressing PR Comments
@@ -17,7 +17,8 @@ Parse `$ARGUMENTS`:
 | Argument | Effect |
 |----------|--------|
 | PR link or number | The PR to work on (see Option A below) |
-| `--unattended` | Run without asking the user anything. See [Unattended Mode](#unattended-mode) |
+| `--plugin` | Triage and approve in the Pair Review IDE plugin. See [Plugin Mode](#plugin-mode) |
+| `--unattended` | Run without asking the user anything. See [Unattended Mode](#unattended-mode). Cannot be combined with `--plugin` |
 | `--author <login>` | Only process threads opened by this login. Repeatable. Pass through to `fetch-unresolved-threads.mjs` |
 | `--no-push` | Skip Step 5; the caller pushes |
 | `--summary-file <path>` | Also write the Step 6 summary as JSON to this path |
@@ -37,6 +38,96 @@ Callers such as `run-agentic-review-loop` use `--unattended` to process automate
 | Reply/resolve choice (4g) | Reply with the commit link and resolve |
 
 Reply style in unattended mode: write for the human reviewers of the PR, in a plain tone. Do not thank or address the bot, do not @-mention it, and use no emoji.
+
+# Plugin Mode
+
+Use plugin mode when the user asks for it: `--plugin`, "use the Pair Review plugin", "address the comments in the IDE", "I'll approve the replies in IntelliJ". It needs the `pair-review-plugin` skill and the plugin's `review_*` tools on the IDE's MCP server. If either is missing, say so and continue interactively.
+
+In plugin mode the user sees every thread at once, with your assessment, a recommended action and the full drafted reply beside the code, and decides there. That replaces the per-thread questions of Step 4, and it changes the order of the work: **triage everything first, change nothing until the user has agreed, post nothing until they confirm.**
+
+Load the `pair-review-plugin` skill and follow its "Respond mode" section for the plugin side (session, hand-offs, decisions, the closing round). This section says how that cycle maps onto this skill's steps and scripts.
+
+| Step | In plugin mode |
+|------|----------------|
+| Prerequisites, 1, 2 | Unchanged. The PR branch must be checked out in the project that is open in the IDE: the plugin places each thread on the files in that working directory. Ask before switching branches on a dirty tree |
+| 3 | Fetch as usual, then start a `respond` session for the PR and send the threads to the plugin (see below) |
+| 4 | Replaced by [Triage](#plugin-mode-triage), the plugin's decision loop, [Fixes](#plugin-mode-fixes) and [Posting](#plugin-mode-posting) |
+| 5 | Push only after the user confirms in the plugin's closing round |
+| 6 | Unchanged, plus `review_mark_submitted` |
+
+## Sending the threads
+
+Start the session with `mode: "respond"`, `kind: "pr"`, `owner`, `repo`, `number`, `branch` and `url` from Step 2, and the stack fields when `stack` is not null. Map each thread from `fetch-unresolved-threads.mjs` to an item of `review_set_existing_threads`:
+
+| Plugin field | From the fetch output |
+|--------------|-----------------------|
+| `id` | `thread_id` |
+| `url` | `url` |
+| `file` | `code_context.file` |
+| `line`, `start_line` | `line_number`, or `line_end` and `line_start` for a range |
+| `side` | `diff_side` |
+| `outdated` | `is_outdated` |
+| `comments` | each comment's `author.login`, `author.avatarUrl` (as `avatar_url`), `body`, `createdAt` (as `created_at`) and `url` |
+| `severity` | From the reviewer's wording: `high` for "blocking", "critical", "must"; `low` for "nit", "optional", "suggestion"; a bot's own label when it gives one; otherwise your judgement |
+| `category` | A short topic, or `Question` when the reviewer asks something |
+
+## Plugin Mode: Triage
+
+Do 4b and 4c for **every** thread before editing any file, then push one response per thread in a single `review_upsert_comments` call. Group threads that one change would settle and say so in each one's `plan`.
+
+| Your conclusion | `response_action` | `resolve_thread` |
+|-----------------|-------------------|------------------|
+| The point holds and belongs in this PR | `fix` | true |
+| A question, or a point to acknowledge; no change | `reply` | false for an open question, true for an acknowledgement |
+| Not valid, or out of scope (pre-existing code, a drive-by refactor) | `decline` | true |
+| Right, but it belongs in another PR of the stack or a follow-up | `defer` | false |
+| Nothing worth saying | `skip` | false |
+
+Write the full reply in `body`, the validity reasoning of 4c in `assessment` and, for a fix, the concrete change in `plan`. For a `fix`, write the reply as prose about the change and leave the commit link out; it is appended when posting. If answering needs research (a query, a log search), do it now and put the result in the reply. If something only the user knows is missing, name it in `needs_input`; never post a placeholder or a guess. Reply style for automated reviewers is the unattended one: no thanks, no @-mention, written for the people reading the PR.
+
+Then wait for the hand-off and work the plugin's loop: redraft where `reply_needs_rework` is true, answer questions, rework `needs-revision` items, and wait again. The user's `action` and `resolve_thread` in the decisions override your recommendations. A response that is still pending is not approved, whatever the hand-off note says.
+
+## Plugin Mode: Fixes
+
+When the plugin reports `summary_requested`, every response is decided. For each accepted response whose `action` is `fix`, in dependency order:
+
+1. Make the change and run the quality checks (4d).
+2. Commit it (4e), one commit per thread, or one for a group of threads settled by the same change.
+3. Record the full hash on the response with `review_upsert_comments` (`id`, `fix_commits`).
+
+Do not push. If the change came out differently from the plan, update `body` and pass `status: "pending"` so the user sees it again. If lint or tests cannot be made to pass, revert the uncommitted change, add a note to the response saying why, and send it back as `pending` with a new recommendation (`defer`, usually).
+
+Then report with `review_set_summary`: each commit and the thread it settles, which replies will be posted, which threads will be resolved, and anything that did not go to plan. Wait for the hand-off.
+
+## Plugin Mode: Posting
+
+Read the decisions again immediately before acting. Proceed only when `ready_to_submit` is true.
+
+With verdict `none`, push and post nothing; go to Step 6.
+
+With verdict `comment`:
+
+1. Push (Step 5), unless `--no-push` was passed.
+2. For each accepted response, write `final_body` to a temporary file and post it. Do not pass reply text on the command line or through `jq`: review text contains quotes, backticks and newlines.
+
+```bash
+# fix: the reply, then the commit link as its last line
+<skill-dir>/scripts/respond-to-thread.mjs --reply-file <FILE> --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> [--resolve] <THREAD_ID>
+
+# reply, decline, defer
+<skill-dir>/scripts/respond-to-thread.mjs --reply-file <FILE> [--resolve] <THREAD_ID>
+
+# skip with resolve_thread true
+<skill-dir>/scripts/respond-to-thread.mjs --resolve <THREAD_ID>
+```
+
+Pass `--resolve` exactly when the decision's `resolve_thread` is true. `<THREAD_ID>` is the decision's `reply_to_thread_id`. Get the hashes for `--commit` from `get-reply-commit-hash.mjs <fix_commit>`. A dropped response, or `skip` without resolve, gets no call at all.
+
+3. Call `review_mark_submitted` with the PR URL.
+
+Summary buckets for Step 6: `fix` → `addressed`; `decline` → `declined`; `defer` and failed fixes → `deferred`; `skip` and dropped → `skipped`; `reply` → `addressed` without a commit. Unlike the interactive flow, a bucket no longer says whether the thread was resolved, so report resolved and open threads separately in the text summary.
+
+If new threads appear while the session is open, fetch again, send the full list to the plugin and add responses for the new ones.
 
 # Prerequisites Check
 
@@ -121,6 +212,7 @@ Run the fetch script to get all unresolved review threads:
 
 The script outputs a JSON array with each thread containing:
 - `thread_id` - For replying and resolving
+- `url` - Permalink of the thread's first comment
 - `is_outdated` - Whether the commented lines have since changed
 - `code_context` - File path and line numbers
 - `diff_side` - Which side of the diff (LEFT/RIGHT)
@@ -304,5 +396,5 @@ All scripts are in `<skill-dir>/scripts/` and are directly executable (no `node`
 | `get-reply-commit-hash.mjs` | Get commit hash info formatted for `respond-to-thread.mjs --commit` |
 | `push-branch.mjs` | Stack-aware push with child rebase and comment link updates |
 | `fetch-unresolved-threads.mjs` | Fetch unresolved PR review threads via GraphQL (`--author`, `--exclude-outdated`) |
-| `respond-to-thread.mjs` | Reply to and/or resolve a thread (`--commit`, `--reply`, `--resolve`) |
+| `respond-to-thread.mjs` | Reply to and/or resolve a thread (`--commit`, `--reply`, `--reply-file`, `--resolve`) |
 | `check-prerequisites.mjs` | Verify gh CLI installation and authentication |

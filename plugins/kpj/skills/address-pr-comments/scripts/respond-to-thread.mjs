@@ -7,8 +7,12 @@
  *
  * Options:
  *   --reply <body>         Add a reply with the given body text
+ *   --reply-file <path>    Add a reply whose body is the contents of this file
+ *                          (for long or multi-line text that is awkward to quote)
  *   --commit <args>        Add a "Resolved by [hash](link)" reply
  *                          Args: <short_hash> <full_hash> <owner> <repo> <pr_number>
+ *                          With --reply or --reply-file, the link is appended to
+ *                          that text as its last line, in one reply
  *   --resolve              Resolve/close the thread
  *
  * Examples:
@@ -24,10 +28,14 @@
  *   # Custom reply and resolve
  *   respond-to-thread.mjs --reply "Done in latest commit" --resolve PRRT_xyz
  *
+ *   # A written reply that ends with the commit link
+ *   respond-to-thread.mjs --reply-file /tmp/reply.md --commit abc1234 abc1234def5678 owner repo 123 --resolve PRRT_xyz
+ *
  * Output: JSON with results of each action performed
  */
 
 import { spawn } from 'child_process';
+import { readFileSync } from 'fs';
 
 const REPLY_MUTATION = `
 mutation($threadId: ID!, $body: String!) {
@@ -121,13 +129,17 @@ function parseArgs(args) {
     replyBody: null,
     resolve: false
   };
+  let text = null;
+  let commitLine = null;
 
   let i = 0;
   while (i < args.length) {
     const arg = args[i];
 
     if (arg === '--reply') {
-      result.replyBody = args[++i];
+      text = args[++i];
+    } else if (arg === '--reply-file') {
+      text = readFileSync(args[++i], 'utf8').trim();
     } else if (arg === '--commit') {
       // Next 5 args: short_hash, full_hash, owner, repo, pr_number
       const shortHash = args[++i];
@@ -135,7 +147,7 @@ function parseArgs(args) {
       const owner = args[++i];
       const repo = args[++i];
       const prNumber = args[++i];
-      result.replyBody = buildCommitReplyBody(shortHash, fullHash, owner, repo, prNumber);
+      commitLine = buildCommitReplyBody(shortHash, fullHash, owner, repo, prNumber);
     } else if (arg === '--resolve') {
       result.resolve = true;
     } else if (!arg.startsWith('-')) {
@@ -144,6 +156,7 @@ function parseArgs(args) {
     i++;
   }
 
+  result.replyBody = [text, commitLine].filter(Boolean).join('\n\n') || null;
   return result;
 }
 
@@ -152,8 +165,10 @@ function printUsage() {
 
 Options:
   --reply <body>         Add a reply with the given body text
+  --reply-file <path>    Add a reply whose body is the contents of this file
   --commit <args>        Add a "Resolved by [hash](link)" reply
                          Args: <short_hash> <full_hash> <owner> <repo> <pr_number>
+                         With --reply or --reply-file, the link is appended to that text
   --resolve              Resolve/close the thread
 
 Examples:
@@ -184,7 +199,7 @@ async function main() {
   }
 
   if (!parsed.replyBody && !parsed.resolve) {
-    console.error('Error: At least one of --reply, --commit, or --resolve is required\n');
+    console.error('Error: At least one of --reply, --reply-file, --commit, or --resolve is required\n');
     printUsage();
     process.exit(1);
   }
