@@ -45,6 +45,7 @@ mutation($threadId: ID!, $body: String!) {
   }) {
     comment {
       id
+      url
       body
       createdAt
       author {

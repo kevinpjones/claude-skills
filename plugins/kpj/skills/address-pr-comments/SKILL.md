@@ -43,7 +43,7 @@ Reply style in unattended mode: write for the human reviewers of the PR, in a pl
 
 Use plugin mode when the user asks for it: `--plugin`, "use the Pair Review plugin", "address the comments in the IDE", "I'll approve the replies in IntelliJ". It needs the `pair-review-plugin` skill and the plugin's `review_*` tools on the IDE's MCP server. If either is missing, say so and continue interactively.
 
-In plugin mode the user sees every thread at once, with your assessment, a recommended action and the full drafted reply beside the code, and decides there. That replaces the per-thread questions of Step 4, and it changes the order of the work: **triage everything first, change nothing until the user has agreed, post nothing until they confirm.**
+In plugin mode the user sees every thread at once, with your assessment, a recommended action and the full drafted reply beside the code, and decides there. That replaces the per-thread questions of Step 4, and it changes the order of the work: **triage everything first and change nothing until the user has agreed. Once every response is decided and handed off, that is their go-ahead for all of it: fix, push, post and resolve without asking again, in the IDE or in the terminal.**
 
 Load the `pair-review-plugin` skill and follow its "Respond mode" section for the plugin side (session, hand-offs, decisions, the closing round). This section says how that cycle maps onto this skill's steps and scripts.
 
@@ -52,8 +52,8 @@ Load the `pair-review-plugin` skill and follow its "Respond mode" section for th
 | Prerequisites, 1, 2 | Unchanged. The PR branch must be checked out in the project that is open in the IDE: the plugin places each thread on the files in that working directory. Ask before switching branches on a dirty tree |
 | 3 | Fetch as usual, then start a `respond` session for the PR and send the threads to the plugin (see below) |
 | 4 | Replaced by [Triage](#plugin-mode-triage), the plugin's decision loop, [Fixes](#plugin-mode-fixes) and [Posting](#plugin-mode-posting) |
-| 5 | Push only after the user confirms in the plugin's closing round |
-| 6 | Unchanged, plus `review_mark_submitted` |
+| 5 | Push once every response is decided and the fixes are committed; no separate confirmation |
+| 6 | Unchanged. Send it to the plugin as the wrap-up too, then wait for the user to press Done |
 
 ## Sending the threads
 
@@ -89,30 +89,24 @@ Then wait for the hand-off and work the plugin's loop: redraft where `reply_need
 
 ## Plugin Mode: Fixes
 
-When the plugin reports `summary_requested`, every response is decided. For each accepted response whose `action` is `fix`, in dependency order:
+When the plugin reports `summary_requested`, every response is decided and handed off. Do not ask whether to go ahead. For each accepted response whose `action` is `fix`, in dependency order:
 
 1. Make the change and run the quality checks (4d).
 2. Commit it (4e), one commit per thread, or one for a group of threads settled by the same change.
-3. Record the full hash on the response with `review_upsert_comments` (`id`, `fix_commits`).
+3. Record the full hash on the response with `review_upsert_comments` (`id`, `fix_commits`). A fix that is not a commit (an edit to the PR description, for instance) has none; mention it in the wrap-up.
 
-Do not push. If the change came out differently from the plan, update `body` and pass `status: "pending"` so the user sees it again. If lint or tests cannot be made to pass, revert the uncommitted change, add a note to the response saying why, and send it back as `pending` with a new recommendation (`defer`, usually).
-
-Then report with `review_set_summary`: each commit and the thread it settles, which replies will be posted, which threads will be resolved, and anything that did not go to plan. Wait for the hand-off.
+Stop only for a response that cannot be carried out as approved. If the change came out materially differently from the plan, update `body` and pass `status: "pending"` so the user sees it again. If lint or tests cannot be made to pass, revert the uncommitted change, add a note to the response saying why, and send it back as `pending` with a new recommendation (`defer`, usually). Either way, wait for the next hand-off before posting anything.
 
 ## Plugin Mode: Posting
 
-Read the decisions again immediately before acting. Proceed only when `ready_to_submit` is true.
-
-With verdict `none`, push and post nothing; go to Step 6.
-
-With verdict `comment`:
+Straight after the fixes, with no further confirmation:
 
 1. Push (Step 5), unless `--no-push` was passed.
 2. For each accepted response, write `final_body` to a temporary file and post it. Do not pass reply text on the command line or through `jq`: review text contains quotes, backticks and newlines.
 
 ```bash
 # fix: the reply, then the commit link as its last line
-<skill-dir>/scripts/respond-to-thread.mjs --reply-file <FILE> --commit <SHORT_HASH> <FULL_HASH> <OWNER> <REPO> <PR_NUMBER> [--resolve] <THREAD_ID>
+<skill-dir>/scripts/respond-to-thread.mjs --reply-file <FILE> --commit <RESPOND_ARGS> [--resolve] <THREAD_ID>
 
 # reply, decline, defer
 <skill-dir>/scripts/respond-to-thread.mjs --reply-file <FILE> [--resolve] <THREAD_ID>
@@ -121,9 +115,13 @@ With verdict `comment`:
 <skill-dir>/scripts/respond-to-thread.mjs --resolve <THREAD_ID>
 ```
 
-Pass `--resolve` exactly when the decision's `resolve_thread` is true. `<THREAD_ID>` is the decision's `reply_to_thread_id`. Get the hashes for `--commit` from `get-reply-commit-hash.mjs <fix_commit>`. A dropped response, or `skip` without resolve, gets no call at all.
+Pass `--resolve` exactly when the decision's `resolve_thread` is true. `<THREAD_ID>` is the decision's `reply_to_thread_id`. `<RESPOND_ARGS>` is the `respond_args` value of `get-reply-commit-hash.mjs <fix_commit> --pr <PR_NUMBER>`, unquoted so it expands to its five arguments. A dropped response, or `skip` without resolve, gets no call at all.
 
-3. Call `review_mark_submitted` with the PR URL.
+3. Record each posted reply with `review_record_posted`: the response's `id` and the `reply.url` that `respond-to-thread.mjs` printed.
+4. Send the wrap-up with `review_set_summary`: what was pushed and tested, and anything that did not go to plan or still needs the user. Do not list the threads one by one; the plugin shows each response with its outcome and link.
+5. Wait for the hand-off. If the user sends the wrap-up back or asks about it, deal with that and send a new one. When the decisions report `session_done: true`, close the session with `review_close_session`. Do not call `review_mark_submitted`.
+
+**In a stack**, Done on one PR is the instruction to go on to the next: check out the next PR that has unresolved threads and start again at Step 3 with a new respond session, saying in one line which PR you moved to. Do not ask whether to continue. Stop when the stack has no unresolved threads left.
 
 Summary buckets for Step 6: `fix` → `addressed`; `decline` → `declined`; `defer` and failed fixes → `deferred`; `skip` and dropped → `skipped`; `reply` → `addressed` without a commit. Unlike the interactive flow, a bucket no longer says whether the thread was resolved, so report resolved and open threads separately in the text summary.
 
@@ -306,7 +304,7 @@ Use only the subject line - no commit body. If the branch's existing commits sta
 <skill-dir>/scripts/get-reply-commit-hash.mjs
 ```
 
-Defaults to HEAD. Pass an optional commit ref to target a different commit. The output includes `short_hash`, `full_hash`, `subject`, and `respond_args` (pre-formatted for `respond-to-thread.mjs --commit`).
+Defaults to HEAD and to the pull request of the current branch. Pass a commit ref to target a different commit and `--pr <number_or_url>` when the commit belongs to another pull request, as in a stack. The output includes `short_hash`, `full_hash`, `subject`, `owner`, `repo`, `pr_number` and `respond_args`: the five arguments `respond-to-thread.mjs --commit` takes, complete.
 
 ### 4g. Ask Approval to Reply and/or Resolve
 
