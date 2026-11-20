@@ -142,13 +142,19 @@ function parseArgs(args) {
     } else if (arg === '--reply-file') {
       text = readFileSync(args[++i], 'utf8').trim();
     } else if (arg === '--commit') {
-      // Next 5 args: short_hash, full_hash, owner, repo, pr_number
-      const shortHash = args[++i];
-      const fullHash = args[++i];
-      const owner = args[++i];
-      const repo = args[++i];
-      const prNumber = args[++i];
-      commitLine = buildCommitReplyBody(shortHash, fullHash, owner, repo, prNumber);
+      // short_hash, full_hash, owner, repo, pr_number: as five arguments, or as one argument holding all
+      // five separated by spaces, which is how a shell that does not split variables (zsh) passes them.
+      let values = args[i + 1]?.trim().split(/\s+/) ?? [];
+      if (values.length === 5) {
+        i += 1;
+      } else {
+        values = args.slice(i + 1, i + 6);
+        i += 5;
+      }
+      if (values.length !== 5 || values.some((value) => !value || value.startsWith('-'))) {
+        throw new Error('--commit needs <short_hash> <full_hash> <owner> <repo> <pr_number>');
+      }
+      commitLine = buildCommitReplyBody(...values);
     } else if (arg === '--resolve') {
       result.resolve = true;
     } else if (!arg.startsWith('-')) {
@@ -191,7 +197,14 @@ async function main() {
     process.exit(args.length === 0 ? 1 : 0);
   }
 
-  const parsed = parseArgs(args);
+  let parsed;
+  try {
+    parsed = parseArgs(args);
+  } catch (error) {
+    console.error(`Error: ${error.message}\n`);
+    printUsage();
+    process.exit(1);
+  }
 
   if (!parsed.threadId) {
     console.error('Error: thread_id is required\n');

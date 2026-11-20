@@ -125,11 +125,13 @@ Straight after the fixes, with no further confirmation:
 <skill-dir>/scripts/respond-to-thread.mjs --resolve <THREAD_ID>
 ```
 
-Pass `--resolve` exactly when the decision's `resolve_thread` is true. `<THREAD_ID>` is the decision's `reply_to_thread_id`. `<RESPOND_ARGS>` is the `respond_args` value of `get-reply-commit-hash.mjs <fix_commit> --pr <PR_NUMBER>`, unquoted so it expands to its five arguments. A dropped response, or `skip` without resolve, gets no call at all.
+Pass `--resolve` exactly when the decision's `resolve_thread` is true. `<THREAD_ID>` is the decision's `reply_to_thread_id`. `<RESPOND_ARGS>` is the `respond_args` value of `get-reply-commit-hash.mjs <fix_commit> --pr <PR_NUMBER>`; pass it quoted as one argument (`--commit "$ARGS"`), which works in every shell, zsh included. A dropped response, or `skip` without resolve, gets no call at all.
 
 3. Record each posted reply with `review_record_posted`: the response's `id` and the `reply.url` that `respond-to-thread.mjs` printed.
 4. Send the wrap-up with `review_set_summary`: what was pushed and tested, and anything that did not go to plan or still needs the user. Do not list the threads one by one; the plugin shows each response with its outcome and link.
 5. Wait for the hand-off. If the user sends the wrap-up back or asks about it, deal with that and send a new one. When the decisions report `session_done: true`, close the session with `review_close_session`. Do not call `review_mark_submitted`.
+
+**If you are held up** at any point after the hand-off (a push is refused, a rebase conflict needs a decision), do not stop and ask in the terminal: the user is in the IDE. Record what is done, send `review_set_summary` with where things stand and `needsInput` saying exactly what you need, and wait in the plugin. The user's answer arrives from the chat on the wrap-up as `reason: "ask"`; see "When you are held up" in the `pair-review-plugin` skill.
 
 **In a stack**, Done on one PR is the instruction to go on to the next: check out the next PR that has unresolved threads and start again at Step 3 with a new respond session, saying in one line which PR you moved to. Do not ask whether to continue. Stop when the stack has no unresolved threads left.
 
