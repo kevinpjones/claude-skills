@@ -50,7 +50,7 @@ Load the `pair-review-plugin` skill and follow its "Respond mode" section for th
 | Step | In plugin mode |
 |------|----------------|
 | Prerequisites, 1, 2 | Unchanged. The PR branch must be checked out in the project that is open in the IDE: the plugin places each thread on the files in that working directory. Ask before switching branches on a dirty tree |
-| 3 | Fetch as usual, then start a `respond` session for the PR and send the threads to the plugin (see below) |
+| 3 | Fetch as usual, then start a `respond` session for the PR and send the threads and the review summaries to the plugin (see below) |
 | 4 | Replaced by [Triage](#plugin-mode-triage), the plugin's decision loop, [Fixes](#plugin-mode-fixes) and [Posting](#plugin-mode-posting) |
 | 5 | Push once every response is decided and the fixes are committed; no separate confirmation |
 | 6 | Unchanged. Send it to the plugin as the wrap-up too, then wait for the user to press Done |
@@ -70,6 +70,16 @@ Start the session with `mode: "respond"`, `kind: "pr"`, `owner`, `repo`, `number
 | `comments` | each comment's `author.login`, `author.avatarUrl` (as `avatar_url`), `body`, `createdAt` (as `created_at`) and `url` |
 | `severity` | From the reviewer's wording: `high` for "blocking", "critical", "must"; `low` for "nit", "optional", "suggestion"; a bot's own label when it gives one; otherwise your judgement |
 | `category` | A short topic, or `Question` when the reviewer asks something |
+
+## Sending the review summaries
+
+The plugin shows the review as a whole on its Review Summary tab. Fetch the submitted reviews and pass the output as `reviews` to `review_set_review_overview`:
+
+```bash
+<skill-dir>/scripts/fetch-review-summaries.mjs <OWNER> <REPO> <PR_NUMBER> [--author <login>]...
+```
+
+Pass the same `--author` filters as for the threads. Once the threads are assessed, call `review_set_review_overview` again with the same `reviews` plus your `assessment` of the review as a whole: what it asks for, how much of it holds, where the real work is, and what you recommend overall. Each call replaces both, so always send them together.
 
 ## Plugin Mode: Triage
 
@@ -394,5 +404,6 @@ All scripts are in `<skill-dir>/scripts/` and are directly executable (no `node`
 | `get-reply-commit-hash.mjs` | Get commit hash info formatted for `respond-to-thread.mjs --commit` |
 | `push-branch.mjs` | Stack-aware push with child rebase and comment link updates |
 | `fetch-unresolved-threads.mjs` | Fetch unresolved PR review threads via GraphQL (`--author`, `--exclude-outdated`) |
+| `fetch-review-summaries.mjs` | Fetch the submitted reviews with verdict and summary, for the plugin's Review Summary tab (`--author`) |
 | `respond-to-thread.mjs` | Reply to and/or resolve a thread (`--commit`, `--reply`, `--reply-file`, `--resolve`) |
 | `check-prerequisites.mjs` | Verify gh CLI installation and authentication |
